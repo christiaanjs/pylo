@@ -1,11 +1,12 @@
 import numpy as np
 import theano
 import theano.tensor as tt
+import theano.tensor.slinalg as tsl
 
 T, A, C, G = range(4)
 
 def make_tensor(x):
-	return theano.shared(np.array(x))
+	return tt.stacklists(x)
 
 def hky_transition_probs(alpha, beta, pi, t):
 	piY = pi[T] + pi[C]
@@ -31,6 +32,18 @@ def hky_transition_probs(alpha, beta, pi, t):
 	])
 
 	return tt.dot(U, tt.dot(tt.diag(tt.exp(lambd * t)), Vt))
+
+
+def hky_transition_probs_expm(alpha, beta, pi, t):
+	Q_nodiag = make_tensor([
+		[0, alpha*pi[C], beta*pi[A], beta*pi[G]],
+		[alpha*pi[T], 0, beta*pi[A], beta*pi[G]],
+		[beta*pi[T], beta*pi[C], 0, alpha*pi[G]],
+		[beta*pi[T], beta*pi[C], alpha*pi[A], 0]	
+	])
+
+	Q = Q_nodiag - tt.diag(Q_nodiag.sum(axis = 1))
+	return tsl.expm(Q*t)
 
 # Start for one sequence
 # Then vectorise (tensor)

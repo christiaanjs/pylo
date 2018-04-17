@@ -8,14 +8,14 @@ T, A, C, G = range(4)
 def make_tensor(x):
 	return tt.stacklists(x)
 
-def hky_transition_probs(alpha, beta, pi, t):
+def hky_transition_probs(kappa, pi, t):
 	piY = pi[T] + pi[C]
 	piR = pi[A] + pi[G]
 	lambd = make_tensor([ # Eigenvalues 
 		0,
-		-beta,
-		-(piY*beta + piR*alpha),
-		-(piY*alpha + piR*beta)		
+		-1,
+		-(piY + piR*kappa),
+		-(piY*kappa + piR)		
 	])
 	U = make_tensor([ # Right eigenvectors as columns (rows of transpose)
 		[1, 1, 1, 1],
@@ -31,32 +31,22 @@ def hky_transition_probs(alpha, beta, pi, t):
 		[1, -1, 0, 0]
 	])
 
-	trace = tt.sum(lambd) # Trace is sum of eigenvalues
+	Q_unnormalised = tt.dot(U, tt.dot(tt.diag(lambd), Vt))
+	average_subs = -tt.nlinalg.trace(tt.dot(Q_unnormalised, tt.diag(pi)))
 
-	return tt.dot(U, tt.dot(tt.diag(tt.exp(lambd / -trace * t)), Vt))
+	return tt.dot(U, tt.dot(tt.diag(tt.exp(lambd / average_subs * t)), Vt))
 
 
-def hky_transition_probs_expm(alpha, beta, pi, t):
+def hky_transition_probs_expm(kappa, pi, t):
 	Q_nodiag = make_tensor([
-		[0, alpha*pi[C], beta*pi[A], beta*pi[G]],
-		[alpha*pi[T], 0, beta*pi[A], beta*pi[G]],
-		[beta*pi[T], beta*pi[C], 0, alpha*pi[G]],
-		[beta*pi[T], beta*pi[C], alpha*pi[A], 0]	
+		[0, kappa*pi[C], pi[A], pi[G]],
+		[kappa*pi[T], 0, pi[A], pi[G]],
+		[pi[T], pi[C], 0, kappa*pi[G]],
+		[pi[T], pi[C], kappa*pi[A], 0]	
 	])
-
-	Q = Q_nodiag - tt.diag(Q_nodiag.sum(axis = 1))
-	return tsl.expm(Q*t)
-
-# Start for one sequence
-# Then vectorise (tensor)
-def hky_loglike(alpha, beta, pi, t, x, y):
-	"""
-	alpha: Transition rate
-	beta: Tranversion rate
-	pi: Equilibrium frequencies
-	x, y: Sequences (encoded as integers)
-	t: Time
-	"""
-	Pt = hky_transition_probs(alpha, beta, pi, t)
-	return Pt[x, y]
 	
+	Q_unnormalised = Q_nodiag - tt.diag(Q_nodiag.sum(axis = 1))
+	average_subs = -tt.nlinalg.trace(tt.dot(Q_unnormalised, tt.diag(pi)))
+
+	return tsl.expm(Q * t / average_subs)
+

@@ -11,13 +11,13 @@ def make_tensor(x):
 def hky_transition_probs(alpha, beta, pi, t):
 	piY = pi[T] + pi[C]
 	piR = pi[A] + pi[G]
-	lambd = make_tensor([ # Eigenvalues
+	lambd = make_tensor([ # Eigenvalues 
 		0,
 		-beta,
 		-(piY*beta + piR*alpha),
 		-(piY*alpha + piR*beta)		
 	])
-	U = make_tensor([ # Right eigenvectors as columns
+	U = make_tensor([ # Right eigenvectors as columns (rows of transpose)
 		[1, 1, 1, 1],
 		[1/piY, 1/piY, -1/piR, -1/piR],
 		[0, 0, pi[G]/piR, -pi[A]/piR],
@@ -31,7 +31,9 @@ def hky_transition_probs(alpha, beta, pi, t):
 		[1, -1, 0, 0]
 	])
 
-	return tt.dot(U, tt.dot(tt.diag(tt.exp(lambd * t)), Vt))
+	trace = tt.sum(lambd) # Trace is sum of eigenvalues
+
+	return tt.dot(U, tt.dot(tt.diag(tt.exp(lambd / -trace * t)), Vt))
 
 
 def hky_transition_probs_expm(alpha, beta, pi, t):

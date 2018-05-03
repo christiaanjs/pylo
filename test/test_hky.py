@@ -46,7 +46,7 @@ def test_hky_transition_probs_scalar(kappa, pi, t, expected):
 	assert_allclose(res, expected)
 
 
-def test_hky_transition_probs_vectorised():
+def test_hky_transition_probs_vec():
 	kappa_ = tt.scalar()
 	pi_ = tt.vector()
 	t_ = tt.scalar()
@@ -57,10 +57,10 @@ def test_hky_transition_probs_vectorised():
 	ts = np.array([1.2, 0.8, 1.3])
 	
 	transition_probs_ = hky_transition_probs_scalar(kappa_, pi_, t_)
-	transition_probs_vectorised_ = hky_transition_probs(kappa_, pi_, ts_)	
+	transition_probs_vectorised_ = hky_transition_probs_vec(kappa_, pi_, ts_)	
 
 	f = theano.function([kappa_, pi_, t_], transition_probs_)
 	f_vectorised = theano.function([kappa_, pi_, ts_], transition_probs_vectorised_)
 	res_scalar = [f(kappa, pi, t) for t in ts]
 	res_vectorised = f_vectorised(kappa, pi, ts)
-	assert_allclose(res_vectorised, np.stack(res_scalar, axis=-1))
+	assert_allclose(res_vectorised, np.stack(res_scalar, axis=0))

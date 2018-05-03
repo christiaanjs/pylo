@@ -54,6 +54,23 @@ def hky_transition_probs_vec(kappa, pi, t):
 	return (U_dot_diag_expanded * Vt_expanded).sum(axis=2)
 	
 	
+def hky_transition_probs_mat(kappa, pi, t):
+	U, lambd, Vt = hky_eigendecomposition(kappa, pi)
+
+	lambd_expanded = lambd.dimshuffle('x', 'x', 0)
+	t_expanded = t.dimshuffle(0, 1, 'x')
+
+	diag = tt.AllocDiag(axis1=2, axis2=3)(tt.exp(t_expanded * lambd_expanded)) #[t.shape, 4, 4]
+
+	U_expanded = U.dimshuffle('x', 'x', 0, 1, 'x')
+	diag_expanded = diag.dimshuffle(0, 1, 'x', 2, 3)
+
+	U_dot_diag = (U_expanded * diag_expanded).sum(axis=3) #[t.shape, 4, 4]
+
+	U_dot_diag_expanded = U_dot_diag.dimshuffle(0, 1, 2, 3, 'x')	
+	Vt_expanded = Vt.dimshuffle('x', 'x', 'x', 0, 1)
+
+	return (U_dot_diag_expanded * Vt_expanded).sum(axis=3)
 
 def hky_transition_probs_scalar(kappa, pi, t):
 	U, lambd, Vt = hky_eigendecomposition(kappa, pi)

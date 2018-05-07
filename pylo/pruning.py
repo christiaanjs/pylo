@@ -6,7 +6,7 @@ from pylo.common import GAP
 
 # For stateless children, use dummy sequence
 # For stateful children, use dummy child indices
-def phylogenetic_log_likelihood(child_indices, child_transition_probs, child_sequences, child_leaf_mask):
+def make_partial_probabilities(child_indices, child_transition_probs, child_sequences, child_leaf_mask):
 	partial_probs = tt.alloc(0.0, child_indices.shape[0], child_sequences.shape[2], 4)
 	
 	def partials_from_partials(child_partials, child_transition_probs):
@@ -27,8 +27,16 @@ def phylogenetic_log_likelihood(child_indices, child_transition_probs, child_seq
 		
 	partial_probs_filled = theano.scan(fill_row,
 		sequences=[tt.arange(child_indices.shape[0]), child_indices, child_sequences, child_transition_probs, child_leaf_mask],
-		outputs_info=partial_probs)[0]
+		outputs_info=partial_probs)[0][-1]
 
 	return partial_probs_filled
-				
-	
+
+def phylogenetic_log_likelihood(child_indices, child_transition_probs, child_patterns, child_leaf_mask, pattern_frequencies, character_frequencies):
+    partials = make_partial_probabilities(child_indices, child_transition_probs, child_patterns, child_leaf_mask) # [node, site, char]
+    root_partials = partials[-1] #[site, char]
+    char_freqs_reshuffled = character_frequencies.dimshuffle('x', 0) #[(site), char]
+    site_probs = (root_partials * char_freqs_reshuffled).sum(axis=1)
+    return (tt.log(site_probs) * pattern_frequencies).sum()
+    
+    
+

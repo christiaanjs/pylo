@@ -1,4 +1,5 @@
 from pylo.common import DUMMY_INDEX
+import pandas as pd
 
 def list_concat(lists, last_item):
     return [y for x in lists for y in x] + [last_item]
@@ -10,6 +11,13 @@ def process_child_result(child, child_result, taxa_dict, dummy_seq):
         return child.length, taxa_dict[child.name], True
     else:
         return child.length, dummy_seq, False
+
+def group_sequences(taxa_dict):
+    taxon_names = list(taxa_dict.keys())
+    taxa_df = pd.DataFrame(taxa_dict)
+    pattern_series = taxa_df.groupby(taxon_names).size()
+    pattern_dict = pattern_series.index.to_frame().to_dict(orient='list')
+    return pattern_dict, pattern_series.values
 
 def reverse_cumsum(x):
     sum_ = 0

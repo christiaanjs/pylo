@@ -15,7 +15,7 @@ def test_pruning(taxa_encoded, tree):
     pattern_frequencies = np.array(pattern_frequencies)
 
     dummy_seq = np.repeat(-1, len(list(taxa_patterns.values())[0]))
-    child_branch_lengths, child_sequences, child_leaf_mask, child_indices = [np.array(x) for x in get_tables(tree, taxa_patterns, dummy_seq)]
+    child_branch_lengths, child_sequences, child_leaf_mask, child_indices = get_tables_np(tree, taxa_patterns, dummy_seq)
 	
     kappa = 1.0
     pi = np.ones(4)/4
@@ -43,7 +43,7 @@ def test_pruning_gradient_substmodel(taxa_encoded, tree):
     pattern_frequencies = np.array(pattern_frequencies)
 
     dummy_seq = np.repeat(-1, len(list(taxa_patterns.values())[0]))
-    child_branch_lengths, child_sequences, child_leaf_mask, child_indices = [np.array(x) for x in get_tables(tree, taxa_patterns, dummy_seq)]
+    child_branch_lengths, child_sequences, child_leaf_mask, child_indices = get_tables_np(tree, taxa_patterns, dummy_seq)
 	
     kappa = 1.0
     pi = np.ones(4)/4
@@ -78,7 +78,7 @@ def test_pruning_gradient_branch(taxa_encoded, tree):
     pattern_frequencies = np.array(pattern_frequencies)
 
     dummy_seq = np.repeat(-1, len(list(taxa_patterns.values())[0]))
-    child_branch_lengths, child_sequences, child_leaf_mask, child_indices = [np.array(x) for x in get_tables(tree, taxa_patterns, dummy_seq)]
+    child_branch_lengths, child_sequences, child_leaf_mask, child_indices = get_tables_np(tree, taxa_patterns, dummy_seq)
 	
     kappa = 1.0
     pi = np.ones(4)/4

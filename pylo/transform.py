@@ -1,8 +1,16 @@
-from pylo.common import DUMMY_INDEX
+from pylo.common import *
 import pandas as pd
+import numpy as np
 
 def list_concat(lists, last_item):
     return [y for x in lists for y in x] + [last_item]
+
+def encode_sequences(taxa_dict):
+    state_dict = { 'A': A, 'C': C, 'G': G, 'T': T, '-': GAP }
+    return { name: [state_dict[char] for char in sequence] for name, sequence in taxa_dict.items() }
+
+def get_dummy_seq(taxa_dict):
+    return np.repeat(GAP, len(list(taxa_dict.values())[0])) 
 
 def process_child_result(child, child_result, taxa_dict, dummy_seq):
     branch_lengths, _, _, _ = child_result
@@ -47,3 +55,6 @@ def get_tables(node, taxa_dict, dummy_seq):
     branch_lengths, sequences, leaf_mask, offsets = get_tables_offset(node, taxa_dict, dummy_seq)
     indices = [ [DUMMY_INDEX if is_leaf else i - offset for offset, is_leaf in zip(offset_row, leaf_row) ] for i, (offset_row, leaf_row) in enumerate(zip(offsets, leaf_mask)) ]
     return branch_lengths, sequences, leaf_mask, indices
+
+def get_tables_np(node, taxa_dict, dummy_seq):
+    return tuple([np.array(x) for x in get_tables(node, taxa_dict, dummy_seq)])

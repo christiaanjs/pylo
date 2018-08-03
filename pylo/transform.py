@@ -12,13 +12,13 @@ def encode_sequences(taxa_dict):
 def get_dummy_seq(taxa_dict):
     return np.repeat(GAP, len(list(taxa_dict.values())[0])) 
 
-def process_child_result(child, child_result, taxa_dict, dummy_seq):
+def process_child_result(child, child_result):
     branch_lengths, _, _, _ = child_result
     child_leaf = len(branch_lengths) == 0
     if child_leaf:
-        return child.length, taxa_dict[child.name], True
+        return child.length, child.name, True
     else:
-        return child.length, dummy_seq, False
+        return child.length, None, False
 
 def group_sequences(taxa_dict):
     taxon_names = list(taxa_dict.keys())
@@ -35,26 +35,35 @@ def reverse_cumsum(x):
         res[i] = x[i] + res[i + 1]
     return res
     
-def get_tables_offset(node, taxa_dict, dummy_seq):
+def get_tables_offset(node):
     children = node.descendants
     if(len(children) == 0):
         return [], [], [], []
     else:
-        child_results = [get_tables_offset(child, taxa_dict, dummy_seq) for child in children]
-        branch_length_results, sequence_results, leaf_results, offset_results = zip(*child_results)
+        child_results = [get_tables_offset(child) for child in children]
+        branch_length_results, leaf_children_results, leaf_results, offset_results = zip(*child_results)
         
-        branch_lengths, sequences, leaf_mask = zip(*[process_child_result(child, result, taxa_dict, dummy_seq) for child, result in zip(children, child_results)])
+        branch_lengths, leaf_children, leaf_mask = zip(*[process_child_result(child, result) for child, result in zip(children, child_results)])
         child_offsets = [DUMMY_INDEX if is_leaf else x for x, is_leaf in zip(reverse_cumsum([len(x) for x in offset_results[1:]] + [1]), leaf_mask)]
 
         return (list_concat(branch_length_results, list(branch_lengths)),
-            list_concat(sequence_results, list(sequences)),
+            list_concat(leaf_children_results, list(leaf_children)),
             list_concat(leaf_results, list(leaf_mask)),
             list_concat(offset_results, child_offsets))
 
-def get_tables(node, taxa_dict, dummy_seq):
-    branch_lengths, sequences, leaf_mask, offsets = get_tables_offset(node, taxa_dict, dummy_seq)
+def get_tables(node):
+    branch_lengths, leaf_children, leaf_mask, offsets = get_tables_offset(node)
     indices = [ [DUMMY_INDEX if is_leaf else i - offset for offset, is_leaf in zip(offset_row, leaf_row) ] for i, (offset_row, leaf_row) in enumerate(zip(offsets, leaf_mask)) ]
-    return branch_lengths, sequences, leaf_mask, indices
+    return branch_lengths, leaf_children, leaf_mask, indices
 
-def get_tables_np(node, taxa_dict, dummy_seq):
-    return tuple([np.array(x) for x in get_tables(node, taxa_dict, dummy_seq)])
+def get_tables_np(node):
+    return tuple([np.array(x) for x in get_tables(node)])
+
+def get_parent_indices(child_indices):
+    n_internal_nodes = len(child_indices)
+    parent_indices = [-1]*n_internal_nodes
+    for i in range(n_internal_nodes):
+        for child_index in child_indices[i]:
+            if child_index != -1:
+                parent_indices[child_index] = i
+    return parent_indices

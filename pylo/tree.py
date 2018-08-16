@@ -1,8 +1,11 @@
+import numpy as np
+import theano
 import theano.tensor as tt
 from pymc3.distributions import Continuous
-from pymc3.distributions.transform import Transform
+from pymc3.distributions.transforms import Transform
 from pymc3.util import get_variable_name
 from pymc3.math import logit, invlogit
+from scipy.special import logit as logit_val
 
 class TreeHeightProportionTransform(Transform):
     name = 'tree_height_proportion'
@@ -11,33 +14,38 @@ class TreeHeightProportionTransform(Transform):
         self.topology = topology
         
     def forward(self, x_): # Theano
-        pass
+        non_root_proportions, root_height = self.topology.get_proportions(x_)
+        return tt.concatenate([logit(non_root_proportions), tt.stack(tt.log(root_height))])
     
     def forward_val(self, x_, point=None): # Numpy
-        pass
+        non_root_proportions, root_height = self.topology.get_proportions(x_)
+        return np.concatenate([logit_val(non_root_proportions), [np.log(root_height)]])
     
     def backward(self, y_):
         root_height = tt.exp(y_[-1]) # Root in last position
-        proportions = tt.invlogit(y_[:-1])
+        proportions = invlogit(y_[:-1])
         return self.topology.get_heights(root_height, proportions)
 
-    def jacobian_det(self, x):
-        pass
+    def jacobian_det(self, y_):
+        jac = theano.gradient.jacobian(self.backward(y_))
+        return tt.log(abs(tt.nlinalg.Det()(jac)))
         
-
 class BirthDeathSamplingTree(Continuous):
-    def __init__(self, topology, lam, mu=0.0, rho=1.0, *args, **kwargs):
-        shape = topology.get_n_internal_nodes()
+    def __init__(self, topology, r=1.0, a=0.0, rho=1.0, *args, **kwargs):
+        shape = topology.get_internal_node_count()
         kwargs.setdefault('shape', shape)
-        super(Continuous, self).__init__(transform=TreeHeightProportionTransform(topology), *args, **kwargs)
+        transform = TreeHeightProportionTransform(topology),
+        testval = np.concatenate([0.5*np.ones(shape - 1), [1.0]])
+        super(BirthDeathSamplingTree, self).__init__(
+            testval=testval, *args, **kwargs)
 
         self.topology = topology
-        self.lam = tt.as_tensor_variable(lam)
-        self.mu = tt.as_tensor_variable(mu)
+        self.r = tt.as_tensor_variable(r)
+        self.a = tt.as_tensor_variable(a)
         self.rho = tt.as_tensor_variable(rho)
 
-        self.r = lam - mu
-        self.a = mu/lam
+        self.mu = self.a*self.r/(1.0-self.a)
+        self.lam = self.r + self.mu
 
         # TODO: think about parameter constraints
 
@@ -60,17 +68,16 @@ class BirthDeathSamplingTree(Continuous):
         
         return tree_logp + tt.sum(ls) + root_term
         
-        
-
-
         # TODO: bound with pymc3.distributions.dist_math.bound
-        
 
-    def _repr_latex(self, name=None, dist=None):
+
+    def _repr_latex_(self, name=None, dist=None):
         if dist is None:
             dist = self
-        mu = dist.mu
-        lam = dist.lam
-        return r'${} \sim \text{{BirthDeathTree}}(\lambda={}, \mu={}'.format(name, get_variable_name(mu), get_variable_name(lam))
+        r = dist.r
+        a = dist.a
+        rho = dist.rho
+        return r'${} \sim \text{{BirthDeathSamplingTree}}(r={}, a={}, \rho={})'.format(name,
+            get_variable_name(r), get_variable_name(a), get_variable_name(rho))
 
     # TODO: def random

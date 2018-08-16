@@ -1,4 +1,5 @@
-from pylo.transform import get_tables, get_parent_indices
+from pylo.transform import get_parent_indices, get_tables_np
+import numpy as np
 import theano
 import theano.tensor as tt
 
@@ -25,8 +26,21 @@ class TreeTopology(object):
         heights_inorder = theano.scan(
             func,
             sequences=(ixs, tt.as_tensor(parent_indices_inorder), parent_proportions_inorder),
-            output_info=out_init)[0][-1]
+            outputs_info=out_init)[0][-1]
         return root_height*heights_inorder[::-1] 
+
+    def get_proportions(self, heights):
+        root_height = heights[-1]
+        non_root_heights = heights[:-1]
+        non_root_parent_indices = self.parent_indices[:-1]
+        parent_heights = heights[non_root_parent_indices]
+        return non_root_heights/parent_heights, root_height
+
+
+    def get_child_branch_lengths(self, heights):
+        child_heights = tt.where(tt.eq(self.child_indices, -1), 0.0, heights[self.child_indices])
+        return heights.dimshuffle(0, 'x') - child_heights
+
 
     def get_internal_node_count(self):
         return len(self.leaf_children)

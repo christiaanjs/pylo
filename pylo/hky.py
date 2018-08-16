@@ -91,3 +91,43 @@ def hky_transition_probs_expm(kappa, pi, t):
 
 	return tsl.expm(Q * t / average_subs)
 
+class SubstitutionModel:
+    def get_transition_probs_scalar(self, d):
+        raise NotImplementedError
+
+    def get_transition_probs_vec(self, d):
+        raise NotImplementedError
+
+    def get_transition_probs_mat(self, d):
+        raise NotImplementedError
+
+    def get_transition_probs(self, d):
+        if d.ndim == 0:
+            return self.get_transition_probs_scalar(d)
+        elif d.ndim == 1:
+            return self.get_transition_probs_vec(d)
+        elif d.ndim == 2:
+            return self.get_transition_probs_mat(d)
+        else:
+            raise ValueError('Only distances up to 2 dimensions supported')
+
+    def get_equilibrium_probs(self):
+        raise NotImplementedError
+
+class HKYSubstitutionModel(SubstitutionModel):
+    def __init__(self, kappa, pi):
+        self.kappa = kappa
+        self.pi = pi
+
+    def get_transition_probs_scalar(self, d):
+        return hky_transition_probs_scalar(self.kappa, self.pi, d)
+        
+    def get_transition_probs_vec(self, d):
+        return hky_transition_probs_vec(self.kappa, self.pi, d)
+        
+    def get_transition_probs_mat(self, d):
+        return hky_transition_probs_mat(self.kappa, self.pi, d)
+    
+    def get_equilibrium_probs(self):
+        return self.pi
+        

@@ -12,7 +12,7 @@ class TreeTopology(object):
         if dummy_seq is None:
             dummy_seq = list(sequence_dict.values())[0]
         
-        return [[dummy_seq if name is None else sequence_dict[name] for name in node] for node in leaf_children]
+        return [[dummy_seq if name is None else sequence_dict[name] for name in node] for node in self.leaf_children]
 
     def get_heights(self, root_height, non_root_proportions):
         n_internal_nodes = len(self.leaf_children)

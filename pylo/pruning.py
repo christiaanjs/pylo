@@ -39,17 +39,16 @@ def phylogenetic_log_likelihood(child_indices, child_transition_probs, child_pat
     site_probs = (root_partials * char_freqs_reshuffled).sum(axis=1)
     return (tt.log(site_probs) * pattern_frequencies).sum()
     
-class LeafSequences(Potential):
-    def __init__(self, name, topology, substitution_model, child_distances, child_patterns, pattern_frequencies, *args, **kwargs):
-        transition_probs = substitution_model.get_transition_probs(child_distances)
-        character_frequencies = substitution_model.get_equilibrium_probs()
-        logp = phylogenetic_log_likelihood(
-            topology.child_indices,
-            transition_probs,
-            child_patterns,
-            topology.leaf_mask,
-            pattern_frequencies,
-            character_frequencies
-        )
-        super(LeafSequences, self).__init__(name, logp, *args, **kwargs)
+def LeafSequences(name, topology, substitution_model, child_distances, child_patterns, pattern_frequencies, *args, **kwargs):
+    transition_probs = substitution_model.get_transition_probs(child_distances)
+    character_frequencies = substitution_model.get_equilibrium_probs()
+    logp = phylogenetic_log_likelihood(
+        tt.as_tensor_variable(topology.child_indices),
+        transition_probs,
+        child_patterns,
+        tt.as_tensor_variable(topology.leaf_mask),
+        pattern_frequencies,
+        character_frequencies
+    )
+    return Potential(name, logp, *args, **kwargs)
         

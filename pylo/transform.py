@@ -67,3 +67,13 @@ def get_parent_indices(child_indices):
             if child_index != -1:
                 parent_indices[child_index] = i
     return parent_indices
+
+def get_node_heights(node):
+    if node.is_leaf:
+        return []
+    else:
+        child_heights = [get_node_heights(child) for child in node.descendants]
+        child_branch_lengths = [child.length for child in node.descendants]
+        node_height = max([single_child_heights[-1] + branch_length if len(single_child_heights) > 0 else branch_length for single_child_heights, branch_length in zip(child_heights, child_branch_lengths)])
+        return np.concatenate(child_heights + [[node_height]])
+        

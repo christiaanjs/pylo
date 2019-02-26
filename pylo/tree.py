@@ -27,8 +27,13 @@ class TreeHeightProportionTransform(Transform):
         return self.topology.get_heights(root_height, proportions)
 
     def jacobian_det(self, y_):
-        jac = theano.gradient.jacobian(self.backward(y_), y_)
-        return tt.log(abs(tt.nlinalg.Det()(jac)))
+        proportions = invlogit(y_[:-1])
+        y_root = y_[-1]
+        times = self.backward(y_)
+        constrain_log_jac_det = y_root + tt.sum(tt.log(proportions) + tt.log(1 - proportions))
+        tree_transform_log_jac_det = tt.sum(tt.log(times[self.topology.parent_indices[:-1]]))
+        return constrain_log_jac_det + tree_transform_log_jac_det
+        
         
 class BirthDeathSamplingTree(Continuous):
     def __init__(self, topology, r=1.0, a=0.0, rho=1.0, *args, **kwargs):

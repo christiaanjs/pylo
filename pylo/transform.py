@@ -68,12 +68,20 @@ def get_parent_indices(child_indices):
                 parent_indices[child_index] = i
     return parent_indices
 
-def get_node_heights(node):
+def get_heights(node):
     if node.is_leaf:
-        return []
+        return np.array([0.0])
     else:
-        child_heights = [get_node_heights(child) for child in node.descendants]
+        child_heights = [get_heights(child) for child in node.descendants]
         child_branch_lengths = [child.length for child in node.descendants]
-        node_height = max([single_child_heights[-1] + branch_length if len(single_child_heights) > 0 else branch_length for single_child_heights, branch_length in zip(child_heights, child_branch_lengths)])
-        return np.concatenate(child_heights + [[node_height]])
-        
+        child_branch_heights = [single_child_heights[-1] + branch_length if len(single_child_heights) > 0 else branch_length for single_child_heights, branch_length in zip(child_heights, child_branch_lengths)]
+        node_height = max(child_branch_heights)
+        adjusted_child_heights = [single_child_heights + (node_height - child_branch_height) for single_child_heights, child_branch_height in zip(child_heights, child_branch_heights)]
+        return np.concatenate(adjusted_child_heights + [[node_height]])
+       
+def get_leaf_mask(node):
+    if node.is_leaf:
+        return [True]
+    else:
+        return np.concatenate([get_leaf_mask(child) for child in node.descendants] + [[False]])
+     

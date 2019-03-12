@@ -1,4 +1,4 @@
-from pylo.transform import get_parent_indices, get_tables_np, get_node_heights
+from pylo.transform import get_parent_indices, get_tables_np, get_heights, get_leaf_mask
 import numpy as np
 import theano
 import theano.tensor as tt
@@ -10,7 +10,10 @@ class TreeTopology(object):
         self.parent_indices = np.array(get_parent_indices(self.child_indices))
 
     def get_init_heights(self):
-        return get_node_heights(self.tree)
+        return get_heights(self.tree)
+    
+    def get_internal_mask(self):
+        return np.logical_not(get_leaf_mask(self.tree))
     
     def build_sequence_table(self, sequence_dict, dummy_seq=None):
         if dummy_seq is None:
@@ -54,4 +57,4 @@ class TreeTopology(object):
 
     def get_root_index(self):
         return self.get_internal_node_count() - 1
-            
+

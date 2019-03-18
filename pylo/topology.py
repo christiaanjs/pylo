@@ -74,6 +74,8 @@ class TreeTopology(object):
         self.max_leaf_descendant_heights = get_max_leaf_descendant_heights(tree)
         self.node_indices = self.node_mask.nonzero()
         self.node_index_mapping = (np.arange(len(self.names))[:, np.newaxis] == self.node_indices).argmax(axis=1)
+        node_parent_indices = self.parent_indices[self.node_mask]
+        self.node_parent_indices = np.where(node_parent_indices == -1, -1, self.node_index_mapping[node_parent_indices])
 
     def get_init_heights(self):
         return get_heights(self.tree)
@@ -90,13 +92,23 @@ class TreeTopology(object):
     def get_proportions(self, heights):
         root_height = heights[-1]
         non_root_heights = heights[:-1]
-        non_root_parent_indices = self.parent_indices[self.node_mask][:-1]
-        parent_heights = heights[self.node_index_mapping[non_root_parent_indices]]
+        parent_heights = heights[self.node_parent_indices[:-1]]
         min_heights = self.max_leaf_descendant_heights[self.node_mask][:-1]
-        return (non_root_heights - min_heights)/(parent_heights - min_heights), root_height
+        return (non_root_heights - min_heights)/(parent_heights - min_heights), root_height - min_heights[-1]
 
-    def get_heights(self, root_height, proportions):
-        pass # TODO
+    def get_heights(self, max_height, proportions, root_proportion=False):
+        n = self.get_internal_node_count()
+        parent_indices_reversed = tt.as_tensor(n - self.node_parent_indices[-2::-1] - 1)
+        max_leaf_height_reversed = tt.as_tensor(self.max_leaf_descendant_heights[self.node_mask][-2::-1])
+        root_max_leaf_height = self.max_leaf_descendant_heights[-1]
+        proportions_reversed = proportions[-2::-1] if root_proportion else proportions[::-1]
+        root_height = max_height * (proportions[-1] if root_proportion else 1.0)  + root_max_leaf_height
+        out_init = tt.set_subtensor(tt.zeros(n)[0], root_height)
+        ixs = tt.arange(1, n)
+        func = lambda i, parent, max_leaf, prop, out: tt.set_subtensor(out[i], prop*(out[parent] - max_leaf) + max_leaf)
+        heights_reversed = theano.scan(func, sequences=(ixs, parent_indices_reversed, max_leaf_height_reversed, proportions_reversed), outputs_info=out_init)[0][-1]
+        return heights_reversed[::-1]
+        
 
     def get_child_branch_lengths(self, heights):
         child_heights = heights[self.child_indices[self.node_mask]]

@@ -68,10 +68,12 @@ class TreeTopology(object):
         self.tree = tree
         self.names = get_names(tree)
         self.leaf_mask = get_leaf_mask(tree)
-        self.node_mask = np.logical_not(leaf_mask)
+        self.node_mask = np.logical_not(self.leaf_mask)
         self.child_indices = get_child_indices(tree)
         self.parent_indices = get_parent_indices(tree)
         self.max_leaf_descendant_heights = get_max_leaf_descendant_heights(tree)
+        self.node_indices = self.node_mask.nonzero()
+        self.node_index_mapping = (np.arange(len(self.names))[:, np.newaxis] == self.node_indices).argmax(axis=1)
 
     def get_init_heights(self):
         return get_heights(self.tree)
@@ -89,8 +91,8 @@ class TreeTopology(object):
         root_height = heights[-1]
         non_root_heights = heights[:-1]
         non_root_parent_indices = self.parent_indices[self.node_mask][:-1]
-        parent_heights = heights[non_root_parent_indices]
-        min_heights = self.max_leaf_descendant_heights[self.node_mask]
+        parent_heights = heights[self.node_index_mapping[non_root_parent_indices]]
+        min_heights = self.max_leaf_descendant_heights[self.node_mask][:-1]
         return (non_root_heights - min_heights)/(parent_heights - min_heights), root_height
 
     def get_heights(self, root_height, proportions):
@@ -107,5 +109,5 @@ class TreeTopology(object):
         return np.sum(self.leaf_mask)
 
     def get_root_index(self):
-        return get_internal_node_count()  - 1
+        return self.get_internal_node_count()  - 1
 

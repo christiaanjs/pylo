@@ -48,10 +48,10 @@ class TreeHeightProportionTransform(Transform):
             root_contrib = y_root
         else:
             root_proportion = invlogit(y_root)
-            root_contrib = tt.log(root_proportion) + tt.log(1 - root_proportion) + tt.log(times[-1] - self.topology.get_max_leaf_height())
+            root_contrib = tt.log(root_proportion) + tt.log(1 - root_proportion) + tt.log(self.max_height - self.topology.get_max_leaf_height())
         
         constrain_log_jac_det = tt.sum(tt.log(proportions) + tt.log(1 - proportions))
-        tree_transform_log_jac_det = tt.sum(tt.log(times[self.topology.parent_indices[:-1]] - self.topology.get_max_node_heights()[:-1]))
+        tree_transform_log_jac_det = tt.sum(tt.log(times[self.topology.node_parent_indices[:-1]] - self.topology.get_max_node_heights()[:-1]))
         return constrain_log_jac_det + tree_transform_log_jac_det + root_contrib
         
         

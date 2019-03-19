@@ -10,22 +10,25 @@ from scipy.linalg import det
 from pylo.topology import TreeTopology
 from pylo.tree import TreeHeightProportionTransform
 
-test_data = [tree_vals + (use_max,) for use_max in [True, False] for tree_vals in
+test_data = [tree_vals + (use_max,) for use_max in [True, False]
+         for tree_vals in
     [ # Tree, proportions, no max root val, optional max height, max height root val
         ('((:0.4,:0.2):0.6,(:0.3,:0.5):0.5)', [0.25, 0.375], 0.8, 2.2, 0.4),
         ('(((:0.2,:0.1):0.3,:0.1):0.3,:0.8)', [0.25, 0.25], 0.4, 1.2, 0.5)
     ]
 ]
 
+ATOL = 1e-12
+
 def unconstrain_proportions(constrained_proportions, root_val, use_max, max_root_val):
     return np.concatenate((logit(constrained_proportions), [(logit(max_root_val) if use_max else np.log(root_val))]))
 
 
-@pytest.mark.parametrize('newick_string,constrained_proportions,root_val,use_max,max_height,max_root_val', test_data)
+@pytest.mark.parametrize('newick_string,constrained_proportions,root_val,max_height,max_root_val,use_max', test_data)
 def test_tree_height_proportion_transform_forward(newick_string, constrained_proportions, root_val, use_max, max_height, max_root_val):
     newick_parsed = newick.loads(newick_string)[0]
     topology = TreeTopology(newick_parsed)
-    node_heights = topology.get_init_heights()
+    node_heights = topology.get_init_heights()[topology.node_mask]
     transform = TreeHeightProportionTransform(topology, max_height=(max_height if use_max else None))
     node_heights_ = tt.vector()
     transformed_ = transform.forward(node_heights_)
@@ -33,24 +36,24 @@ def test_tree_height_proportion_transform_forward(newick_string, constrained_pro
     transformed = transform_func(node_heights)
 
     expected = unconstrain_proportions(constrained_proportions, root_val, use_max, max_root_val)
-    assert_allclose(transformed, expected)
+    assert_allclose(transformed, expected, atol=ATOL)
 
 
-@pytest.mark.parametrize('newick_string,constrained_proportions,root_val,use_max,max_height,max_root_val', test_data)
+@pytest.mark.parametrize('newick_string,constrained_proportions,root_val,max_height,max_root_val,use_max', test_data)
 def test_tree_height_proportion_transform_backward(newick_string, constrained_proportions, root_val, use_max, max_height, max_root_val):
     newick_parsed = newick.loads(newick_string)[0]
     topology = TreeTopology(newick_parsed)
-    expected_node_heights = topology.get_init_heights()
+    expected_node_heights = topology.get_init_heights()[topology.node_mask]
     transform = TreeHeightProportionTransform(topology, max_height=(max_height if use_max else None))
     transformed_ = tt.vector()
     node_heights_ = transform.backward(transformed_)
     transform_func = theano.function([transformed_], node_heights_)
     node_heights = transform_func(unconstrain_proportions(constrained_proportions, root_val, use_max, max_root_val))
 
-    assert_allclose(node_heights, expected_node_heights)
+    assert_allclose(node_heights, expected_node_heights, atol=ATOL)
 
 
-@pytest.mark.parametrize('newick_string,constrained_proportions,root_val,use_max,max_height,max_root_val', test_data)
+@pytest.mark.parametrize('newick_string,constrained_proportions,root_val,max_height,max_root_val,use_max', test_data)
 def test_tree_height_proportion_transform_jacobian(newick_string, constrained_proportions, root_val, use_max, max_height, max_root_val):
     newick_parsed = newick.loads(newick_string)[0]
     topology = TreeTopology(newick_parsed)
@@ -60,7 +63,8 @@ def test_tree_height_proportion_transform_jacobian(newick_string, constrained_pr
     jac_ = theano.gradient.jacobian(node_heights_, transformed_)
     jac_func = theano.function([transformed_], jac_)
     jac_expected = jac_func(unconstrain_proportions(constrained_proportions, root_val, use_max, max_root_val))
+    log_det_jac_expected = np.log(np.abs(det(jac_expected)))
     log_det_jac_ = transform.jacobian_det(transformed_)
     log_det_jac_func = theano.function([transformed_], log_det_jac_)
     log_det_jac = log_det_jac_func(unconstrain_proportions(constrained_proportions, root_val, use_max, max_root_val))
-    assert_allclose(log_det_jac, log_det_jac_expected)
+    assert_allclose(log_det_jac, log_det_jac_expected, atol=ATOL)

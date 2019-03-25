@@ -66,6 +66,7 @@ def get_names(node):
 class TreeTopology(object):
     def __init__(self, tree):
         self.tree = tree
+        self.init_heights = get_heights(tree)
         self.names = get_names(tree)
         self.leaf_mask = get_leaf_mask(tree)
         self.node_mask = np.logical_not(self.leaf_mask)
@@ -73,12 +74,12 @@ class TreeTopology(object):
         self.parent_indices = get_parent_indices(tree)
         self.max_leaf_descendant_heights = get_max_leaf_descendant_heights(tree)
         self.node_indices = self.node_mask.nonzero()
-        self.node_index_mapping = (np.arange(len(self.names))[:, np.newaxis] == self.node_indices).argmax(axis=1)
+        self.node_index_mapping = np.where(self.node_mask, (np.arange(len(self.names))[:, np.newaxis] == self.node_indices).argmax(axis=1), -1)
         node_parent_indices = self.parent_indices[self.node_mask]
         self.node_parent_indices = np.where(node_parent_indices == -1, -1, self.node_index_mapping[node_parent_indices])
 
     def get_init_heights(self):
-        return get_heights(self.tree)
+        return self.init_heights
     
     def build_sequence_table(self, sequence_dict, dummy_seq=None):
         if dummy_seq is None:
@@ -106,7 +107,11 @@ class TreeTopology(object):
         func = lambda i, parent, max_leaf, prop, out: tt.set_subtensor(out[i], prop*(out[parent] - max_leaf) + max_leaf)
         heights_reversed = theano.scan(func, sequences=(ixs, parent_indices_reversed, max_leaf_height_reversed, proportions[::-1]), outputs_info=out_init)[0][-1]
         return heights_reversed[::-1]
-        
+
+    def get_heights_sorted(self, node_heights):
+        heights = tt.where(self.node_mask, node_heights[self.node_index_mapping], self.heights)
+        argsort = tt.argsort(heights)
+        return heights[argsort], self.node_mask[argsort]
 
     def get_child_branch_lengths(self, heights):
         child_heights = heights[self.child_indices[self.node_mask]]

@@ -8,7 +8,7 @@ from scipy.special import logit
 from scipy.linalg import det
 
 from pylo.topology import TreeTopology
-from pylo.tree import TreeHeightProportionTransform
+from pylo.tree.transform import TreeHeightProportionTransform
 
 test_data = [tree_vals + (use_max,) for use_max in [True, False]
          for tree_vals in

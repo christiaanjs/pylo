@@ -17,4 +17,5 @@ def group_sequences(taxa_dict):
     taxa_df = pd.DataFrame(taxa_dict)
     pattern_series = taxa_df.groupby(taxon_names).size()
     pattern_dict = pattern_series.index.to_frame().to_dict(orient='list')
+    return pattern_dict, pattern_series.values
 

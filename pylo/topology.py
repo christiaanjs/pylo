@@ -77,6 +77,9 @@ class TreeTopology(object):
         self.node_index_mapping = np.where(self.node_mask, (np.arange(len(self.names))[:, np.newaxis] == self.node_indices).argmax(axis=1), -1)
         node_parent_indices = self.parent_indices[self.node_mask]
         self.node_parent_indices = np.where(node_parent_indices == -1, -1, self.node_index_mapping[node_parent_indices])
+        node_child_indices = self.child_indices[self.node_mask]
+        node_child_indices = np.where(self.node_mask[node_child_indices], node_child_indices, -1)
+        self.node_child_indices = np.where(node_child_indices == -1, -1, self.node_index_mapping[node_child_indices])
 
     def get_init_heights(self):
         return self.init_heights
@@ -109,16 +112,19 @@ class TreeTopology(object):
         return heights_reversed[::-1]
 
     def get_heights_sorted(self, node_heights):
-        heights = tt.where(self.node_mask, node_heights[self.node_index_mapping], self.heights)
+        heights = tt.where(self.node_mask, node_heights[self.node_index_mapping], self.init_heights)
         argsort = tt.argsort(heights)
-        return heights[argsort], self.node_mask[argsort]
+        return heights[argsort], tt.as_tensor_variable(self.node_mask)[argsort]
 
     def get_child_branch_lengths(self, heights):
-        child_heights = heights[self.child_indices[self.node_mask]]
+        child_heights = heights[self.node_index_mapping[self.child_indices[self.node_mask]]]
         return heights.dimshuffle(0, 'x') - child_heights
 
     def get_internal_node_count(self):
         return np.sum(self.node_mask)
+    
+    def get_node_count(self):
+        return len(self.node_mask)
 
     def get_taxon_count(self):
         return np.sum(self.leaf_mask)

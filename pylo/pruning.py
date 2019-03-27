@@ -42,11 +42,12 @@ def phylogenetic_log_likelihood(child_indices, child_transition_probs, child_pat
 def LeafSequences(name, topology, substitution_model, child_distances, child_patterns, pattern_frequencies, *args, **kwargs):
     transition_probs = substitution_model.get_transition_probs(child_distances)
     character_frequencies = substitution_model.get_equilibrium_probs()
+    child_leaf_mask = topology.leaf_mask[topology.child_indices[topology.node_mask]]
     logp = phylogenetic_log_likelihood(
-        tt.as_tensor_variable(topology.child_indices),
+        tt.as_tensor_variable(topology.node_child_indices),
         transition_probs,
         child_patterns,
-        tt.as_tensor_variable(topology.leaf_mask),
+        tt.as_tensor_variable(child_leaf_mask),
         pattern_frequencies,
         character_frequencies
     )

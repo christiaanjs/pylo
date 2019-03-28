@@ -115,9 +115,16 @@ class TreeTopology(object):
         heights = tt.where(self.node_mask, node_heights[self.node_index_mapping], self.init_heights)
         argsort = tt.argsort(heights)
         return heights[argsort], tt.as_tensor_variable(self.node_mask)[argsort]
+    
+    def get_node_child_leaf_mask(self):
+        return self.leaf_mask[self.child_indices[self.node_mask]]
 
     def get_child_branch_lengths(self, heights):
-        child_heights = heights[self.node_index_mapping[self.child_indices[self.node_mask]]]
+        child_heights = tt.where(
+            self.get_node_child_leaf_mask(),
+            self.init_heights[self.child_indices[self.node_mask]],
+            heights[self.node_index_mapping[self.child_indices[self.node_mask]]]
+        )
         return heights.dimshuffle(0, 'x') - child_heights
 
     def get_internal_node_count(self):

@@ -1,0 +1,38 @@
+<beast version='2.0' namespace='beast.core
+    :beast.core.parameter
+    :beast.evolution.sitemodel
+    :beast.evolution.substitutionmodel
+    :beast.evolution.alignment
+    :beast.app.seqgen'>
+
+    <run spec="SequenceSimulator"
+        sequencelength="{{ sequence_length }}"
+        outputFileName="sequences.xml">
+
+        <!-- This is how we specify the taxa. -->
+        <data spec='Alignment' id="input_alignment" dataType="nucleotide">
+            {% for taxon_name in taxon_names %}<sequence spec='Sequence' taxon="{{ taxon_name }}" value="?"/>
+        {% endfor %}
+        </data>
+
+        <!-- The true tree down which sequences are simulated. -->
+        <tree spec='beast.util.TreeParser'
+            newick="{{ newick_string }}"
+            IsLabelledNewick="true"
+            adjustTipHeights="false"/>
+
+        <siteModel spec="SiteModel" gammaCategoryCount="4">
+            <!--<mutationRate spec="RealParameter" value ="0.005"/>-->
+            <mutationRate spec="RealParameter" value ="10"/>
+            <shape spec="RealParameter" value="0.5"/>
+            <proportionInvariant spec="RealParameter" value="0.0"/>
+            <substModel spec="HKY">
+                <kappa spec="RealParameter" value="2.0"/>
+                <frequencies spec="Frequencies">
+                    <!-- These must sum to 1 -->
+                    <frequencies spec="RealParameter" value="0.25 0.25 0.25 0.25"/>
+                </frequencies>
+            </substModel>
+        </siteModel>
+    </run>
+</beast>

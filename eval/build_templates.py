@@ -5,6 +5,13 @@ import jinja2
 template_dir = 'templates'
 out_dir = 'out'
 out_path = pathlib.Path(out_dir)
+
+template_env = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'))
+
+###################
+# Tree Simulation #
+###################
+
 tree_sim_template_file = 'sim-tree.j2.xml'
 tree_sim_out_file = 'sim-tree.xml'
 
@@ -18,10 +25,35 @@ sampling_times = [random.random() * sampling_window for i in range(n_taxa)]
 taxon_names = ["T{}".format(i) for i in range(n_taxa)]
 date_trait_string = ','.join(['{0}={1}'.format(taxon_name, sampling_time) for taxon_name, sampling_time in zip(taxon_names, sampling_times)])
 
-template_env = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'))
-
 tree_sim_template = template_env.get_template(tree_sim_template_file)
 tree_sim_string = tree_sim_template.render(pop_size=pop_size, date_trait_string=date_trait_string, taxon_names=taxon_names)  
 
-with open(out_path / tree_sim_out_file, 'w') as f:
+tree_sim_out_path = out_path / tree_sim_out_file
+with open(tree_sim_out_path, 'w') as f:
     f.write(tree_sim_string)
+
+#######################
+# Sequence Simulation #
+#######################
+
+from Bio import Phylo
+import io
+
+seq_sim_template_file = 'sim-seq.j2.xml'
+tree_sim_result_path = tree_sim_out_path.with_suffix('.trees')
+seq_sim_out_file = 'sim-seq.xml'
+
+sequence_length = 20
+
+with io.StringIO() as s:
+    Phylo.convert(tree_sim_result_path, 'nexus', s, 'newick')
+    newick_string = s.getvalue().strip()
+    
+
+seq_sim_template = template_env.get_template(seq_sim_template_file)
+seq_sim_string = seq_sim_template.render(taxon_names=taxon_names, newick_string=newick_string, sequence_length=sequence_length) # TODO: Site and branch rate models
+
+with open(out_path / seq_sim_out_file, 'w') as f:
+    f.write(seq_sim_string)
+
+

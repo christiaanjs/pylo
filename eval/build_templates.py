@@ -44,6 +44,9 @@ tree_sim_result_path = tree_sim_out_path.with_suffix('.trees')
 seq_sim_out_file = 'sim-seq.xml'
 
 sequence_length = 20
+mutation_rate = 3.0
+kappa = 2.0
+frequencies = [0.25, 0.25, 0.25, 0.25]
 
 with io.StringIO() as s:
     Phylo.convert(tree_sim_result_path, 'nexus', s, 'newick')
@@ -51,9 +54,23 @@ with io.StringIO() as s:
     
 
 seq_sim_template = template_env.get_template(seq_sim_template_file)
-seq_sim_string = seq_sim_template.render(taxon_names=taxon_names, newick_string=newick_string, sequence_length=sequence_length) # TODO: Site and branch rate models
+seq_sim_string = seq_sim_template.render(
+    taxon_names=taxon_names,
+    newick_string=newick_string,
+    sequence_length=sequence_length,
+    mutation_rate=mutation_rate,
+    kappa=kappa,
+    frequencies=frequencies)
 
 with open(out_path / seq_sim_out_file, 'w') as f:
     f.write(seq_sim_string)
 
+##############################
+# Extract sequences from XML #
+##############################
 
+seq_sim_result_file = 'sequences.xml'
+
+import xml
+seq_xml_root = xml.etree.ElementTree.parse(out_path / seq_sim_result_file)
+sequence_dict = { tag.attrib['taxon']: tag.attrib['value'] for tag in seq_xml_root.find('./sequence') }

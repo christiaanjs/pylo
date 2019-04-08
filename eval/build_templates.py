@@ -47,6 +47,7 @@ sequence_length = 20
 mutation_rate = 3.0
 kappa = 2.0
 frequencies = [0.25, 0.25, 0.25, 0.25]
+rate_sd = 0.5
 
 with io.StringIO() as s:
     Phylo.convert(tree_sim_result_path, 'nexus', s, 'newick')
@@ -60,7 +61,8 @@ seq_sim_string = seq_sim_template.render(
     sequence_length=sequence_length,
     mutation_rate=mutation_rate,
     kappa=kappa,
-    frequencies=frequencies)
+    frequencies=frequencies,
+    rate_sd=rate_sd)
 
 with open(out_path / seq_sim_out_file, 'w') as f:
     f.write(seq_sim_string)

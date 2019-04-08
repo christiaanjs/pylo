@@ -2,6 +2,8 @@
     :beast.core.parameter
     :beast.evolution.sitemodel
     :beast.evolution.substitutionmodel
+    :beast.evolution.branchratemodel
+    :beast.math.distributions
     :beast.evolution.alignment
     :beast.app.seqgen'>
 
@@ -9,14 +11,13 @@
         sequencelength="{{ sequence_length }}"
         outputFileName="sequences.xml">
 
-        <!-- This is how we specify the taxa. -->
-        <data spec='Alignment' id="input_alignment" dataType="nucleotide">
-            {% for taxon_name in taxon_names %}<sequence spec='Sequence' taxon="{{ taxon_name }}" value="?"/>
+        <data spec="Alignment" id="input_alignment" dataType="nucleotide">
+            {% for taxon_name in taxon_names %}<sequence spec="Sequence" taxon="{{ taxon_name }}" value="?"/>
         {% endfor %}
         </data>
 
-        <!-- The true tree down which sequences are simulated. -->
-        <tree spec='beast.util.TreeParser'
+        <tree spec="beast.util.TreeParser"
+            id="tree"
             newick="{{ newick_string }}"
             IsLabelledNewick="true"
             adjustTipHeights="false"/>
@@ -27,10 +28,16 @@
             <substModel spec="HKY">
                 <kappa spec="RealParameter" value="{{ kappa }}"/>
                 <frequencies spec="Frequencies">
-                    <!-- These must sum to 1 -->
                     <frequencies spec="RealParameter" value="{{ frequencies|join(' ') }}"/>
                 </frequencies>
             </substModel>
         </siteModel>
+        <branchRateModel spec="UCRelaxedClockModel" tree="@tree">
+            <distr spec="LogNormalDistributionModel" meanInRealSpace="true">
+                <parameter name="M" value="1"/>
+                <parameter name="S" value="{{ rate_sd }}"/>
+            </distr>
+            <parameter spec="RealParameter" name="rates" value="0"/>
+        </branchRateModel>
     </run>
 </beast>

@@ -1,0 +1,14 @@
+<beast version="2.0"
+    namespace="beast.core
+    :beast.util
+    :beast.evolution.alignment">
+    <run spec="feast.simulation.GPSimulator" nSims="1">
+        <simulationObject spec="ClusterTree" clusterType="{{ cluster_type }}">
+            <taxa spec="Alignment" dataType="nucleotide">
+                {% for taxon_name, sequence in taxa %}<sequence spec="Sequence" taxon="{{ taxon_name }}">{{ sequence }}</sequence>
+            {% endfor %}
+            </taxa>
+            <trait spec="TraitSet" traitname="date" value="{{ date_trait_string }}" taxa="@taxa"/>
+        </simulationObject>
+    </run>
+</beast>

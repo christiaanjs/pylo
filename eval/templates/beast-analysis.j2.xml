@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood" required="BEAST v2.5.2" version="2.5">
+
+    <data id="SequenceSimulator" name="alignment">
+        {% for taxon_name, sequence in sequence_dict.items() %}<sequence id="Sequence{{ taxon_name }}" taxon="{{ taxon_name }}" totalcount="4" value="{{ sequence }}"/>
+        {% endfor %}
+        <userDataType id="Nucleotide" spec="beast.evolution.datatype.Nucleotide"/>
+    </data>
+<map name="Exponential" >beast.math.distributions.Exponential</map>
+<map name="LogNormal" >beast.math.distributions.LogNormalDistributionModel</map>
+<map name="Normal" >beast.math.distributions.Normal</map>
+<map name="Beta" >beast.math.distributions.Beta</map>
+<map name="Gamma" >beast.math.distributions.Gamma</map>
+<map name="LaplaceDistribution" >beast.math.distributions.LaplaceDistribution</map>
+<map name="prior" >beast.math.distributions.Prior</map>
+<map name="InverseGamma" >beast.math.distributions.InverseGamma</map>
+<map name="OneOnX" >beast.math.distributions.OneOnX</map>
+
+
+<run id="mcmc" spec="MCMC" chainLength="{{ chain_length }}">
+    <state id="state" storeEvery="5000">
+        <tree id="Tree.t:SequenceSimulator" name="stateNode">
+            <trait id="dateTrait.t:SequenceSimulator" spec="beast.evolution.tree.TraitSet" traitname="date">
+                    {{ date_trait_string }}
+                <taxa id="TaxonSet.SequenceSimulator" spec="TaxonSet" alignment="@SequenceSimulator"/>
+            </trait>
+            <taxonset idref="TaxonSet.SequenceSimulator"/>
+        </tree>
+        <parameter id="kappa.s:SequenceSimulator" lower="0.0" name="stateNode">{{ init_values['kappa'] }}</parameter>
+        <parameter id="popSize.t:SequenceSimulator" name="stateNode">{{ init_values['pop_size'] }}</parameter>
+        <parameter id="clockRate.c:SequenceSimulator" name="stateNode">{{ init_values['clock_rate'] }}</parameter>
+        <parameter id="freqParameter.s:SequenceSimulator" dimension="4" lower="0.0" name="stateNode" upper="1.0">0.25</parameter>
+    </state>
+    <init spec="beast.util.TreeParser" initial="@Tree.t:SequenceSimulator" taxa="@SequenceSimulator" IsLabelledNewick="true" newick="{{ newick_string  }}"/>   
+
+    <distribution id="posterior" spec="util.CompoundDistribution">
+        <distribution id="prior" spec="util.CompoundDistribution">
+            <distribution id="CoalescentConstant.t:SequenceSimulator" spec="Coalescent">
+                <populationModel id="ConstantPopulation.t:SequenceSimulator" spec="ConstantPopulation" popSize="@popSize.t:SequenceSimulator"/>
+                <treeIntervals id="TreeIntervals.t:SequenceSimulator" spec="TreeIntervals" tree="@Tree.t:SequenceSimulator"/>
+            </distribution>
+            <prior id="ClockPrior.c:SequenceSimulator" name="distribution" x="@clockRate.c:SequenceSimulator">
+                <LogNormal id="LogNormalDistributionModel.0" name="distr">
+                    <parameter id="RealParameter.0" estimate="false" name="M">{{ prior_params['clock_rate']['m'] }}</parameter>
+                    <parameter id="RealParameter.1" estimate="false" name="S">{{ prior_params['clock_rate']['s'] }}</parameter>
+                </LogNormal>
+            </prior>
+            <prior id="KappaPrior.s:SequenceSimulator" name="distribution" x="@kappa.s:SequenceSimulator">
+                <LogNormal id="LogNormalDistributionModel.1" name="distr">
+                    <parameter id="RealParameter.2" estimate="false" name="M">{{ prior_params['kappa']['m'] }}</parameter>
+                    <parameter id="RealParameter.3" estimate="false" name="S">{{ prior_params['kappa']['s'] }}</parameter>
+                </LogNormal>
+            </prior>
+            <prior id="PopSizePrior.t:SequenceSimulator" name="distribution" x="@popSize.t:SequenceSimulator">
+                <LogNormal id="LogNormalDistributionModel.2" name="distr">
+                    <parameter id="RealParameter.4" estimate="false" name="M">{{ prior_params['pop_size']['m'] }}</parameter>
+                    <parameter id="RealParameter.5" estimate="false" name="S">{{ prior_params['pop_size']['s'] }}</parameter>
+                </LogNormal>
+            </prior>
+        </distribution>
+        <distribution id="likelihood" spec="util.CompoundDistribution" useThreads="true">
+            <distribution id="treeLikelihood.SequenceSimulator" spec="ThreadedTreeLikelihood" data="@SequenceSimulator" tree="@Tree.t:SequenceSimulator">
+                <siteModel id="SiteModel.s:SequenceSimulator" spec="SiteModel">
+                    <parameter id="mutationRate.s:SequenceSimulator" estimate="false" name="mutationRate">1.0</parameter>
+                    <parameter id="gammaShape.s:SequenceSimulator" estimate="false" name="shape">1.0</parameter>
+                    <parameter id="proportionInvariant.s:SequenceSimulator" estimate="false" lower="0.0" name="proportionInvariant" upper="1.0">0.0</parameter>
+                    <substModel id="hky.s:SequenceSimulator" spec="HKY" kappa="@kappa.s:SequenceSimulator">
+                        <frequencies id="estimatedFreqs.s:SequenceSimulator" spec="Frequencies" frequencies="@freqParameter.s:SequenceSimulator"/>
+                    </substModel>
+                </siteModel>
+                <branchRateModel id="StrictClock.c:SequenceSimulator" spec="beast.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:SequenceSimulator"/>
+            </distribution>
+        </distribution>
+    </distribution>
+
+    <operator id="KappaScaler.s:SequenceSimulator" spec="ScaleOperator" parameter="@kappa.s:SequenceSimulator" scaleFactor="0.5" weight="0.1"/>
+
+    <operator id="CoalescentConstantTreeScaler.t:SequenceSimulator" spec="ScaleOperator" scaleFactor="0.5" tree="@Tree.t:SequenceSimulator" weight="3.0"/>
+
+    <operator id="CoalescentConstantTreeRootScaler.t:SequenceSimulator" spec="ScaleOperator" rootOnly="true" scaleFactor="0.5" tree="@Tree.t:SequenceSimulator" weight="3.0"/>
+
+    <operator id="CoalescentConstantUniformOperator.t:SequenceSimulator" spec="Uniform" tree="@Tree.t:SequenceSimulator" weight="30.0"/>
+    
+    {% if estimate_topology %}
+    <operator id="CoalescentConstantSubtreeSlide.t:SequenceSimulator" spec="SubtreeSlide" tree="@Tree.t:SequenceSimulator" weight="15.0"/>
+
+    <operator id="CoalescentConstantNarrow.t:SequenceSimulator" spec="Exchange" tree="@Tree.t:SequenceSimulator" weight="15.0"/>
+
+    <operator id="CoalescentConstantWide.t:SequenceSimulator" spec="Exchange" isNarrow="false" tree="@Tree.t:SequenceSimulator" weight="3.0"/>
+
+    <operator id="CoalescentConstantWilsonBalding.t:SequenceSimulator" spec="WilsonBalding" tree="@Tree.t:SequenceSimulator" weight="3.0"/>
+    {% endif %}
+    <operator id="PopSizeScaler.t:SequenceSimulator" spec="ScaleOperator" parameter="@popSize.t:SequenceSimulator" scaleFactor="0.75" weight="3.0"/>
+
+    <operator id="StrictClockRateScaler.c:SequenceSimulator" spec="ScaleOperator" parameter="@clockRate.c:SequenceSimulator" scaleFactor="0.75" weight="3.0"/>
+
+    <operator id="strictClockUpDownOperator.c:SequenceSimulator" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <up idref="clockRate.c:SequenceSimulator"/>
+        <down idref="Tree.t:SequenceSimulator"/>
+    </operator>
+
+    <operator id="FrequenciesExchanger.s:SequenceSimulator" spec="DeltaExchangeOperator" delta="0.01" weight="0.1">
+        <parameter idref="freqParameter.s:SequenceSimulator"/>
+    </operator>
+
+    <logger id="tracelog" fileName="SequenceSimulator.log" logEvery="{{ log_every }}" model="@posterior" sanitiseHeaders="true" sort="smart">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+        <log idref="treeLikelihood.SequenceSimulator"/>
+        <log id="TreeHeight.t:SequenceSimulator" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:SequenceSimulator"/>
+        <log idref="kappa.s:SequenceSimulator"/>
+        <log idref="popSize.t:SequenceSimulator"/>
+        <log idref="CoalescentConstant.t:SequenceSimulator"/>
+        <log idref="clockRate.c:SequenceSimulator"/>
+        <log idref="freqParameter.s:SequenceSimulator"/>
+    </logger>
+
+    <logger id="screenlog" logEvery="{{ log_every }}">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+    </logger>
+
+    <logger id="treelog.t:SequenceSimulator" fileName="$(tree).trees" logEvery="{{ log_every }}" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:SequenceSimulator" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:SequenceSimulator"/>
+    </logger>
+
+</run>
+
+</beast>

@@ -32,6 +32,7 @@
                 </frequencies>
             </substModel>
         </siteModel>
+        {% if relaxed_clock %}
         <branchRateModel spec="UCRelaxedClockModel" tree="@tree">
             <distr spec="LogNormalDistributionModel" meanInRealSpace="true">
                 <parameter name="M" value="1"/>
@@ -39,5 +40,6 @@
             </distr>
             <parameter spec="RealParameter" name="rates" value="0"/>
         </branchRateModel>
+        {% endif %}
     </run>
 </beast>

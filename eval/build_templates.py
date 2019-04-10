@@ -116,3 +116,25 @@ beast_analysis_string = beast_analysis_template.render(
 
 with open(out_path / beast_analysis_out_file, 'w') as f:
     f.write(beast_analysis_string)
+
+
+######################
+# PyMC Analysis file #
+######################
+
+import json
+
+pymc_analysis_out_file = 'pymc_analyis.json'
+
+inference = 'mean_field' # or full rank, normalising flow
+
+
+config_dict = {
+    'newick_string': newick_string,
+    'sequence_dict': sequence_dict,
+    'prior_params': prior_params,
+    'inference': inference
+}
+
+with open(out_path / pymc_analysis_out_file, 'w') as f:
+    json.dump(config_dict, f)

@@ -127,13 +127,15 @@ import json
 pymc_analysis_out_file = 'pymc_analyis.json'
 
 inference = 'mean_field' # or full rank, normalising flow
+n_iter = 20000
 
 
 config_dict = {
     'newick_string': newick_string,
     'sequence_dict': sequence_dict,
     'prior_params': prior_params,
-    'inference': inference
+    'inference': inference,
+    'n_iter': n_iter
 }
 
 with open(out_path / pymc_analysis_out_file, 'w') as f:

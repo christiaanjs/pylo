@@ -50,9 +50,23 @@ inference = {
 
 import time
 
-tracker = pm.callbacks.Tracker(
+class SampleTracker(pm.callbacks.Tracker):
+    def __init__(self, save_every=1000, *args, **kwargs):
+        self.save_every = save_every
+        super().__init__(*args, **kwargs)
+
+    def record(self, approx, hist, i):
+        if i % self.save_every == 0:
+            super().record(approx, hist, i)
+
+    __call__ = record
+
+tracker = SampleTracker(
     time=time.time,
     **{ key: value.eval for key, value in inference.approx.shared_params.items() }
 )
 
 trace = inference.fit(n=config['n_iter'], callbacks=[tracker])
+
+print(tracker)
+print(tracker['mu'])

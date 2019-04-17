@@ -105,6 +105,7 @@ beast_analysis_out_file = 'beast-analysis.xml'
 
 beast_analysis_template = template_env.get_template(beast_analysis_template_file)
 beast_analysis_string = beast_analysis_template.render(
+    pop_size=pop_size,
     newick_string=newick_string,
     sequence_dict=sequence_dict,
     date_trait_string=date_trait_string,
@@ -124,18 +125,22 @@ with open(out_path / beast_analysis_out_file, 'w') as f:
 
 import json
 
-pymc_analysis_out_file = 'pymc_analyis.json'
+pymc_analysis_out_file = 'pymc_analysis.json'
+pymc_analysis_result_file = str(out_path / 'pymc_results.pickle')
 
 inference = 'mean_field' # or full rank, normalising flow
-n_iter = 20000
-
+n_iter = 5000
+n_eval_samples = 1000
 
 config_dict = {
+    'pop_size': pop_size,
     'newick_string': newick_string,
     'sequence_dict': sequence_dict,
     'prior_params': prior_params,
     'inference': inference,
-    'n_iter': n_iter
+    'n_iter': n_iter,
+    'out_file': pymc_analysis_result_file,
+    'n_eval_samples': n_eval_samples
 }
 
 with open(out_path / pymc_analysis_out_file, 'w') as f:

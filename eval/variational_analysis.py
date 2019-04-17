@@ -49,6 +49,13 @@ class SampleTracker(pm.callbacks.Tracker):
 
     __call__ = record
 
+def construct_inference(config, model):
+    return {
+        'mean_field': pm.ADVI,
+        'full_rank': pm.FullRank
+    }[config['inference']](model=model)
+
+
 if __name__ == '__main__':
     config_filename = sys.argv[1]
 
@@ -56,11 +63,7 @@ if __name__ == '__main__':
         config = json.load(f)     
 
     model = construct_model(config)
-
-    inference = {
-        'mean_field': pm.ADVI,
-        'full_rank': pm.FullRank
-    }[config['inference']](model=model)
+    inference = construct_inference(config, model)
 
     tracker = SampleTracker(
         i=lambda approx, hist, i: i,
@@ -71,4 +74,4 @@ if __name__ == '__main__':
     trace = inference.fit(n=config['n_iter'], callbacks=[tracker])
     
     with open(config['out_file'], 'wb') as f:     
-        pickle.dump(tracker.hist)
+        pickle.dump(tracker.hist, f)

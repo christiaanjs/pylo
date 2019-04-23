@@ -9,7 +9,7 @@
 
     <run spec="SequenceSimulator"
         sequencelength="{{ sequence_length }}"
-        outputFileName="sequences.xml">
+        outputFileName="{{ out_file }}">
 
         <data spec="Alignment" id="input_alignment" dataType="nucleotide">
             {% for taxon_name in taxon_names %}<sequence spec="Sequence" taxon="{{ taxon_name }}" value="?"/>

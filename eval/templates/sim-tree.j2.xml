@@ -16,7 +16,7 @@
             <trait spec="TraitSet" traitname="date" value="{{ date_trait_string }}" taxa="@taxonSet"/> 
         </simulationObject>
 
-        <logger logEvery="1" fileName="$(filebase).trees">
+        <logger logEvery="1" fileName="{{ out_file }}">
             <log idref="tree"/>
         </logger>
     </run>

@@ -12,11 +12,9 @@ import json
 import time
 import pickle
 
-def construct_model(config):
-    tree = newick.loads(config['newick_string'])[0]
+def construct_model(config, tree, sequence_dict):
     topology = TreeTopology(tree)
 
-    sequence_dict = config['sequence_dict']
     sequence_dict_encoded = pylo.transform.encode_sequences(sequence_dict)
     pattern_dict, pattern_counts = pylo.transform.group_sequences(sequence_dict_encoded)
     pattern_counts = tt.as_tensor_variable(pattern_counts)
@@ -55,13 +53,7 @@ def construct_inference(config, model):
         'full_rank': pm.FullRank
     }[config['inference']](model=model)
 
-
-if __name__ == '__main__':
-    config_filename = sys.argv[1]
-
-    with open(config_filename) as f:
-        config = json.load(f)     
-
+def run_analysis(config, tree, sequence_dict):
     model = construct_model(config)
     inference = construct_inference(config, model)
 

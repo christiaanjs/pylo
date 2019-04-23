@@ -1,0 +1,12 @@
+beast_jar: lib/feast.jar
+seed: 1
+n_taxa: 10
+min_pop_size: 1000
+max_pop_size: 2000
+sampling_window: 100
+sequence_length: 20
+relaxed_clock: False
+mutation_rate: 3.0
+kappa: 2.0
+frequencies: [0.25, 0.25, 0.25, 0.25]
+rate_sd: null

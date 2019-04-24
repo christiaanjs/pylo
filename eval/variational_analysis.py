@@ -14,7 +14,6 @@ import pickle
 
 def construct_model(config, tree, sequence_dict):
     topology = TreeTopology(tree)
-
     sequence_dict_encoded = pylo.transform.encode_sequences(sequence_dict)
     pattern_dict, pattern_counts = pylo.transform.group_sequences(sequence_dict_encoded)
     pattern_counts = tt.as_tensor_variable(pattern_counts)
@@ -37,7 +36,7 @@ def construct_model(config, tree, sequence_dict):
     return model
 
 class SampleTracker(pm.callbacks.Tracker):
-    def __init__(self, save_every=1000, *args, **kwargs):
+    def __init__(self, save_every=1, *args, **kwargs):
         self.save_every = save_every
         super().__init__(*args, **kwargs)
 
@@ -53,8 +52,11 @@ def construct_inference(config, model):
         'full_rank': pm.FullRank
     }[config['inference']](model=model)
 
-def run_analysis(config, tree, sequence_dict):
-    model = construct_model(config)
+def run_analysis(config, newick_string, sequence_dict, out_file):
+    pm.set_tt_rng(config['seed'])
+    np.random.seed(config['seed'])
+    tree = newick.loads(newick_string)[0]
+    model = construct_model(config, tree, sequence_dict)
     inference = construct_inference(config, model)
 
     tracker = SampleTracker(
@@ -65,5 +67,5 @@ def run_analysis(config, tree, sequence_dict):
 
     trace = inference.fit(n=config['n_iter'], callbacks=[tracker])
     
-    with open(config['out_file'], 'wb') as f:     
+    with open(out_file, 'wb') as f:     
         pickle.dump(tracker.hist, f)

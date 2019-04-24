@@ -102,7 +102,7 @@
         <parameter idref="freqParameter.s:SequenceSimulator"/>
     </operator>
 
-    <logger id="tracelog" fileName="SequenceSimulator.log" logEvery="{{ log_every }}" model="@posterior" sanitiseHeaders="true" sort="smart">
+    <logger id="tracelog" fileName="{{ trace_out_path }}" logEvery="{{ log_every }}" model="@posterior" sanitiseHeaders="true" sort="smart">
         <log idref="posterior"/>
         <log idref="likelihood"/>
         <log idref="prior"/>
@@ -121,7 +121,7 @@
         <log idref="prior"/>
     </logger>
 
-    <logger id="treelog.t:SequenceSimulator" fileName="$(tree).trees" logEvery="{{ log_every }}" mode="tree">
+    <logger id="treelog.t:SequenceSimulator" fileName="{{ tree_out_path }}" logEvery="{{ log_every }}" mode="tree">
         <log id="TreeWithMetaDataLogger.t:SequenceSimulator" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:SequenceSimulator"/>
     </logger>
 

@@ -9,7 +9,7 @@ from pylo.hky import HKYSubstitutionModel
 from pylo.pruning import LeafSequences
 import sys
 import json
-import time
+import datetime
 import pickle
 
 def construct_model(config, tree, sequence_dict):
@@ -53,19 +53,19 @@ def construct_inference(config, model):
     }[config['inference']](model=model)
 
 def run_analysis(config, newick_string, sequence_dict, out_file):
-    pm.set_tt_rng(config['seed'])
-    np.random.seed(config['seed'])
     tree = newick.loads(newick_string)[0]
     model = construct_model(config, tree, sequence_dict)
     inference = construct_inference(config, model)
 
     tracker = SampleTracker(
         i=lambda approx, hist, i: i,
-        time=time.time,
+        date_time=datetime.datetime.now,
         **{ key: value.eval for key, value in inference.approx.shared_params.items() }
     )
 
-    trace = inference.fit(n=config['n_iter'], callbacks=[tracker])
+    inference.fit(n=config['n_iter'], callbacks=[tracker])
     
     with open(out_file, 'wb') as f:     
         pickle.dump(tracker.hist, f)
+
+    return model, inference, tracker.hist

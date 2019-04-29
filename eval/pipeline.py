@@ -25,7 +25,6 @@ def run_pipeline(**config):
     build_templates = templating.TemplateBuilder(out_dir)
 
     beast_args = ['java'] + cmd_kwargs(jar=config['beast_jar'], seed=config['seed']) + ['-overwrite']
-    print(beast_args)
     
     pop_size, taxon_names, date_trait_string = build_templates.build_tree_sim(config)
     
@@ -45,7 +44,7 @@ def run_pipeline(**config):
     
     build_templates.build_beast_analysis(config, newick_string, date_trait_string, sequence_dict)
     print('Running BEAST analysis')
-    subprocess.run(beast_args + [build_templates.beast_analysis_out_path])
+    subprocess.run(beast_args + [str(build_templates.beast_analysis_out_path)])
 
     beast_scores = process_results.get_beast_scores(build_templates.beast_analysis_trace_path, config, pop_size).assign(method='beast')
     variational_scores = process_results.get_variational_scores(pymc_result, config, model, inference, pop_size).assign(method='pymc')

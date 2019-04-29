@@ -58,6 +58,7 @@ def run_analysis(config, newick_string, sequence_dict, out_file):
     inference = construct_inference(config, model)
 
     tracker = SampleTracker(
+        save_every=config['log_every'],
         i=lambda approx, hist, i: i,
         date_time=datetime.datetime.now,
         **{ key: value.eval for key, value in inference.approx.shared_params.items() }

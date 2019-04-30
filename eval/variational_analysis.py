@@ -49,7 +49,7 @@ class SampleTracker(pm.callbacks.Tracker):
 def construct_inference(config, model):
     return {
         'mean_field': pm.ADVI,
-        'full_rank': pm.FullRank
+        'full_rank': pm.FullRankADVI
     }[config['inference']](model=model)
 
 def run_analysis(config, newick_string, sequence_dict, out_file):
@@ -70,3 +70,29 @@ def run_analysis(config, newick_string, sequence_dict, out_file):
         pickle.dump(tracker.hist, f)
 
     return model, inference, tracker.hist
+
+class TimedTrace(pm.backends.NDArray):
+    def setup(self, draws, chain, sampler_vars=None):
+        super().setup(draws, chain, sampler_vars=sampler_vars)
+        self.times = np.empty(draws, dtype='datetime64[s]')
+        
+    def record(self, point, sampler_stats=None):
+        self.times[self.draw_idx] = np.datetime64(datetime.datetime.now())
+        super().record(point, sampler_stats=sampler_stats)
+        
+    def close(self):
+        super().close()
+        if self.draw_idx == self.draws:
+            return
+        self.times = self.times[:self.draw_idx]
+        
+
+def run_nuts(config, model, out_file):
+    with model:
+        trace = TimedTrace()
+        pm.sample(chains=1, draws=config['nuts_draws'], tune=config['nuts_tune'], trace=trace)
+   
+    with open(out_file, 'wb') as f:
+        pickle.dump(trace, f) 
+
+    return trace

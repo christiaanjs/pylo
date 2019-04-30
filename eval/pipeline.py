@@ -41,14 +41,18 @@ def run_pipeline(**config):
     
     print('Running variational analysis')
     model, inference, pymc_result = variational_analysis.run_analysis(config, newick_string, sequence_dict, build_templates.pymc_analysis_result_path)
+
+    print('Running NUTS analysis')
+    nuts_result = variational_analysis.run_nuts(config, model, build_templates.nuts_trace_path)
     
     build_templates.build_beast_analysis(config, newick_string, date_trait_string, sequence_dict)
     print('Running BEAST analysis')
     subprocess.run(beast_args + [str(build_templates.beast_analysis_out_path)])
 
     beast_scores = process_results.get_beast_scores(build_templates.beast_analysis_trace_path, config, pop_size).assign(method='beast')
+    nuts_scores = process_results.get_nuts_scores(nuts_result, config, pop_size).assign(method='nuts')
     variational_scores = process_results.get_variational_scores(pymc_result, config, model, inference, pop_size).assign(method='pymc')
-    combined_scores = pd.concat([beast_scores, variational_scores])
+    combined_scores = pd.concat([beast_scores, nuts_scores, variational_scores])
     combined_scores.to_csv(build_templates.run_results_path)
 
     run_summary = {

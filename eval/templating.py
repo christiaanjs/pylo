@@ -42,6 +42,9 @@ class TemplateBuilder:
         self.run_results_file = 'results.csv'
         self.run_results_path = self.out_path / self.run_results_file
 
+        self.nuts_trace_file = 'nuts.pickle'
+        self.nuts_trace_path = self.out_path / self.nuts_trace_file
+
     def build_tree_sim(self, config):
         min_pop_size, max_pop_size, sampling_window, n_taxa = config['min_pop_size'], config['max_pop_size'], config['sampling_window'], config['n_taxa'] 
         pop_size = int(random.random() * (max_pop_size - min_pop_size) + min_pop_size)

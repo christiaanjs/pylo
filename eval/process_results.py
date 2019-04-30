@@ -27,3 +27,18 @@ def get_beast_scores(result_filename, config, true_pop_size):
         'date_time': trace_df['datetime'],
         'error': scores
     })
+
+def get_nuts_scores(trace, config, true_pop_size):
+    draws = config['nuts_draws']
+    pop_size_samples = trace.get_values('pop_size')[-draws:]
+    def get_score_for_iteration(i):
+        to_use = pop_size_samples[:(i+1)]
+        return np.mean(abs(to_use - true_pop_size))/true_pop_size
+
+    scores = [get_score_for_iteration(i) for i in range(draws)]
+    return pd.DataFrame({
+        'date_time': trace.times[-draws:],
+        'error': scores
+    })
+        
+

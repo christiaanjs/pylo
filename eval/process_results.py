@@ -28,16 +28,17 @@ def get_beast_scores(result_filename, config, true_pop_size):
         'error': scores
     })
 
-def get_nuts_scores(trace, config, true_pop_size):
-    draws = config['nuts_draws']
+def get_mcmc_scores(trace, config, true_pop_size):
+    draws = config['chain_length']
+    log_every = config['log_every']
     pop_size_samples = trace.get_values('pop_size')[-draws:]
     def get_score_for_iteration(i):
-        to_use = pop_size_samples[:(i+1)]
+        to_use = pop_size_samples[int(i * config['burn_in']):(i+1)]
         return np.mean(abs(to_use - true_pop_size))/true_pop_size
 
-    scores = [get_score_for_iteration(i) for i in range(draws)]
+    scores = [get_score_for_iteration(i) for i in range(0, draws, log_every)]
     return pd.DataFrame({
-        'date_time': trace.times[-draws:],
+        'date_time': trace.times[-draws::log_every],
         'error': scores
     })
         

@@ -87,10 +87,11 @@ class TimedTrace(pm.backends.NDArray):
         self.times = self.times[:self.draw_idx]
         
 
-def run_nuts(config, model, out_file):
+def run_mcmc(config, model, out_file):
     with model:
         trace = TimedTrace()
-        pm.sample(chains=1, draws=config['nuts_draws'], tune=config['nuts_tune'], trace=trace)
+        step = pm.Metropolis()
+        pm.sample(chains=1, draws=config['chain_length'], trace=trace, step=[step], tune=0)
    
     with open(out_file, 'wb') as f:
         pickle.dump(trace, f) 

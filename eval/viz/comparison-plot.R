@@ -16,5 +16,6 @@ withTime <- df %>%
   mutate(elapsed_time = date_time - min(date_time)) %>% 
   ungroup()
 
-ggplot(withTime, aes(x = elapsed_time, y = error, colour = method)) +
-  geom_point()
+ggplot(withTime, aes(x = elapsed_time, y = error)) +
+  geom_point() + 
+  facet_grid(seed ~ method, scales = 'free')

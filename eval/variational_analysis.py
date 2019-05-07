@@ -95,7 +95,7 @@ def run_mcmc(config, newick_string, sequence_dict, out_file):
     with model:
         trace = TimedTrace()
         step = pm.Metropolis()
-        pm.sample(chains=1, draws=config['chain_length'], trace=trace, step=[step], tune=0)
+        pm.sample(chains=1, draws=config['nuts_draws'], trace=trace, step=[step], tune=0)
    
     with open(out_file, 'wb') as f:
         pickle.dump(trace, f) 

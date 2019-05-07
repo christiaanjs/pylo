@@ -27,7 +27,7 @@
         </tree>
         <parameter id="kappa.s:SequenceSimulator" lower="0.0" name="stateNode">{{ init_values['kappa'] }}</parameter>
         <parameter id="popSize.t:SequenceSimulator" name="stateNode">{{ init_values['pop_size'] }}</parameter>
-        <parameter id="clockRate.c:SequenceSimulator" name="stateNode">{{ init_values['clock_rate'] }}</parameter>
+        {% if estimate_clock_rate %}<parameter id="clockRate.c:SequenceSimulator" name="stateNode">{{ init_values['clock_rate'] }}</parameter>{% endif %}
         <parameter id="freqParameter.s:SequenceSimulator" dimension="4" lower="0.0" name="stateNode" upper="1.0">0.25</parameter>
     </state>
     <init spec="beast.util.TreeParser" initial="@Tree.t:SequenceSimulator" taxa="@SequenceSimulator" IsLabelledNewick="true" newick="{{ newick_string  }}"/>   
@@ -38,12 +38,13 @@
                 <populationModel id="ConstantPopulation.t:SequenceSimulator" spec="ConstantPopulation" popSize="@popSize.t:SequenceSimulator"/>
                 <treeIntervals id="TreeIntervals.t:SequenceSimulator" spec="TreeIntervals" tree="@Tree.t:SequenceSimulator"/>
             </distribution>
-            <prior id="ClockPrior.c:SequenceSimulator" name="distribution" x="@clockRate.c:SequenceSimulator">
+            {% if estimate_clock_rate %}<prior id="ClockPrior.c:SequenceSimulator" name="distribution" x="@clockRate.c:SequenceSimulator">
                 <LogNormal id="LogNormalDistributionModel.0" name="distr">
                     <parameter id="RealParameter.0" estimate="false" name="M">{{ prior_params['clock_rate']['m'] }}</parameter>
                     <parameter id="RealParameter.1" estimate="false" name="S">{{ prior_params['clock_rate']['s'] }}</parameter>
                 </LogNormal>
             </prior>
+            {% endif %}
             <prior id="KappaPrior.s:SequenceSimulator" name="distribution" x="@kappa.s:SequenceSimulator">
                 <LogNormal id="LogNormalDistributionModel.1" name="distr">
                     <parameter id="RealParameter.2" estimate="false" name="M">{{ prior_params['kappa']['m'] }}</parameter>
@@ -67,7 +68,11 @@
                         <frequencies id="estimatedFreqs.s:SequenceSimulator" spec="Frequencies" frequencies="@freqParameter.s:SequenceSimulator"/>
                     </substModel>
                 </siteModel>
+                {% if estimate_clock_rate %}
                 <branchRateModel id="StrictClock.c:SequenceSimulator" spec="beast.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:SequenceSimulator"/>
+                {% else %}
+                <branchRateModel id="StrictClock.c:SequenceSimulator" spec="beast.evolution.branchratemodel.StrictClockModel" clock.rate="{{ mutation_rate }}"/>
+                {% endif %}
             </distribution>
         </distribution>
     </distribution>
@@ -91,12 +96,14 @@
     {% endif %}
     <operator id="PopSizeScaler.t:SequenceSimulator" spec="ScaleOperator" parameter="@popSize.t:SequenceSimulator" scaleFactor="0.75" weight="3.0"/>
 
+    {% if estimate_clock_rate %}
     <operator id="StrictClockRateScaler.c:SequenceSimulator" spec="ScaleOperator" parameter="@clockRate.c:SequenceSimulator" scaleFactor="0.75" weight="3.0"/>
 
     <operator id="strictClockUpDownOperator.c:SequenceSimulator" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
         <up idref="clockRate.c:SequenceSimulator"/>
         <down idref="Tree.t:SequenceSimulator"/>
     </operator>
+    {% endif %}
 
     <operator id="FrequenciesExchanger.s:SequenceSimulator" spec="DeltaExchangeOperator" delta="0.01" weight="0.1">
         <parameter idref="freqParameter.s:SequenceSimulator"/>
@@ -111,7 +118,7 @@
         <log idref="kappa.s:SequenceSimulator"/>
         <log idref="popSize.t:SequenceSimulator"/>
         <log idref="CoalescentConstant.t:SequenceSimulator"/>
-        <log idref="clockRate.c:SequenceSimulator"/>
+        {% if estimate_clock_rate %}<log idref="clockRate.c:SequenceSimulator"/>{% endif %}
         <log idref="freqParameter.s:SequenceSimulator"/>
 	<log spec="feast.DateTimeLoggable"/>
     </logger>

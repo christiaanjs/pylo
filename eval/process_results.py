@@ -57,12 +57,15 @@ def get_variational_trace(result_filename, config, sequence_dict, newick_string)
         var.set_value(pymc_tracker[key][-1])
     return inference.approx.sample(config['n_trace_samples'])
 
+def get_trace_cols(config):
+    return ['tree_height', 'kappa', 'pop_size'] + (['clock_rate'] if config['estimate_clock_rate'] else [])
+
 def process_pymc_trace(trace, config, resample=False, burn_in=False):
     trace_df = pm.trace_to_dataframe(trace)
     if burn_in:
         trace_df = trace_df[int(trace_df.shape[0]*config['burn_in']):]
     root_height_col = 'tree__' + str(config['n_taxa'] - 2)
-    full_trace = trace_df[[root_height_col, 'kappa', 'pop_size', 'clock_rate']].rename({ root_height_col: 'tree_height' }, axis=1)
+    full_trace = trace_df.rename({ root_height_col: 'tree_height' }, axis=1)[get_trace_cols(config)]
 
     if resample:
         return full_trace.sample(config['n_trace_samples'], random_state=config['seed'])
@@ -72,5 +75,5 @@ def process_pymc_trace(trace, config, resample=False, burn_in=False):
 def process_beast_trace(result_filename, config):
     trace_df = pd.read_table(result_filename, comment='#')
     to_use = trace_df[int(trace_df.shape[0]*config['burn_in']):]
-    full_trace = to_use[['TreeHeight', 'kappa', 'popSize', 'clockRate']].rename({ 'TreeHeight': 'tree_height', 'popSize': 'pop_size', 'clockRate': 'clock_rate' }, axis=1)
+    full_trace = to_use.rename({ 'TreeHeight': 'tree_height', 'popSize': 'pop_size', 'clockRate': 'clock_rate' }, axis=1)[get_trace_cols(config)]
     return full_trace.sample(config['n_trace_samples'], random_state=config['seed'])

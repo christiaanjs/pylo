@@ -30,7 +30,7 @@ def construct_model(config, tree, sequence_dict):
         kappa = pm.Lognormal('kappa', **get_lognormal_params('kappa'))
         pi = pm.Dirichlet('pi', a=np.ones(4))
         substitution_model = HKYSubstitutionModel(kappa, pi)
-        clock_rate = pm.Lognormal('clock_rate', **get_lognormal_params('clock_rate'))
+        clock_rate = pm.Lognormal('clock_rate', **get_lognormal_params('clock_rate')) if config['estimate_clock_rate'] else config['mutation_rate']
 
         branch_lengths = topology.get_child_branch_lengths(tree_heights)
         distances = branch_lengths * clock_rate

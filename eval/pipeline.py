@@ -14,10 +14,14 @@ def cmd_kwargs(**kwargs):
     pairs = [("-"+ key, str(value)) for key, value in kwargs.items()]
     return [x for pair in pairs for x in pair]
 
-def run_pipeline(**config):
+def do_seeding(config):
     random.seed(config['seed'])
     pm.set_tt_rng(config['seed'])
     np.random.seed(config['seed'])
+    
+
+def sim_pipeline(**config):
+    do_seeding(config)
 
     out_dir = config['out_dir']
     if not os.path.exists(out_dir):
@@ -39,21 +43,21 @@ def run_pipeline(**config):
 
     sequence_dict = build_templates.extract_sequence_dict()
     
-    print('Running variational analysis')
-    model, inference, pymc_result = variational_analysis.run_analysis(config, newick_string, sequence_dict, build_templates.pymc_analysis_result_path)
+    #print('Running variational analysis')
+    #model, inference, pymc_result = variational_analysis.run_analysis(config, newick_string, sequence_dict, build_templates.pymc_analysis_result_path)
 
-    print('Running MCMC analysis')
-    mcmc_result = variational_analysis.run_mcmc(config, model, build_templates.nuts_trace_path)
+    #print('Running MCMC analysis')
+    #mcmc_result = variational_analysis.run_mcmc(config, model, build_templates.nuts_trace_path)
     
     build_templates.build_beast_analysis(config, newick_string, date_trait_string, sequence_dict)
     print('Running BEAST analysis')
-    #subprocess.run(beast_args + [str(build_templates.beast_analysis_out_path)])
+    subprocess.run(beast_args + [str(build_templates.beast_analysis_out_path)])
 
     #beast_scores = process_results.get_beast_scores(build_templates.beast_analysis_trace_path, config, pop_size).assign(method='beast')
-    mcmc_scores = process_results.get_mcmc_scores(mcmc_result, config, pop_size).assign(method='mcmc')
-    variational_scores = process_results.get_variational_scores(pymc_result, config, model, inference, pop_size).assign(method='advi')
-    combined_scores = pd.concat([mcmc_scores, variational_scores])
-    combined_scores.to_csv(build_templates.run_results_path)
+    #mcmc_scores = process_results.get_mcmc_scores(mcmc_result, config, pop_size).assign(method='mcmc')
+    #variational_scores = process_results.get_variational_scores(pymc_result, config, model, inference, pop_size).assign(method='advi')
+    #combined_scores = pd.concat([mcmc_scores, variational_scores])
+    #combined_scores.to_csv(build_templates.run_results_path)
 
     run_summary = {
         'config': config,
@@ -65,9 +69,37 @@ def run_pipeline(**config):
     with(open(build_templates.run_summary_path, 'w')) as f:
         yaml.dump(run_summary, f)
 
+def variational_pipeline(**config):
+    do_seeding(config)
+    build_templates = templating.TemplateBuilder(config['out_dir'])
+
+    sequence_dict = build_templates.extract_sequence_dict()
+    
+    with(open(build_templates.run_summary_path)) as f:
+        run_summary = yaml.load(f)
+
+    model, inference, result = variational_analysis.run_analysis(config, run_summary['newick_string'], sequence_dict, build_templates.pymc_analysis_result_path)
+    
+    scores = process_results.get_variational_scores(result, config, model, inference, run_summary['pop_size'])
+    scores.to_csv(build_templates.pymc_analysis_score_path)
+
+def mcmc_pipeline(**config):
+    do_seeding(config)
+    build_templates = templating.TemplateBuilder(config['out_dir'])
+
+    sequence_dict = build_templates.extract_sequence_dict()
+    
+    with(open(build_templates.run_summary_path)) as f:
+        run_summary = yaml.load(f)
+
+    variational_analysis.run_mcmc(config, run_summary['newick_string'], sequence_dict, build_templates.nuts_trace_path)
+    
+
 if __name__ == '__main__':
     config_filename = sys.argv[1]
+    to_call = eval(sys.argv[2])
+    
     with open(config_filename) as f:
         config = yaml.load(f)
     for i in range(config['n_runs']):
-        run_pipeline(out_dir='out/' + str(i) , seed=i+1, **config)
+        to_call(out_dir='out/' + str(i) , seed=i+1, **config)

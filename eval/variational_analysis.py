@@ -30,9 +30,11 @@ def construct_model(config, tree, sequence_dict):
         kappa = pm.Lognormal('kappa', **get_lognormal_params('kappa'))
         pi = pm.Dirichlet('pi', a=np.ones(4))
         substitution_model = HKYSubstitutionModel(kappa, pi)
+        clock_rate = pm.Lognormal('clock_rate', **get_lognormal_params('clock_rate'))
 
         branch_lengths = topology.get_child_branch_lengths(tree_heights)
-        sequences = LeafSequences('sequences', topology, substitution_model, branch_lengths, child_patterns, pattern_counts)
+        distances = branch_lengths * clock_rate
+        sequences = LeafSequences('sequences', topology, substitution_model, distances, child_patterns, pattern_counts)
     return model
 
 class SampleTracker(pm.callbacks.Tracker):
@@ -87,7 +89,9 @@ class TimedTrace(pm.backends.NDArray):
         self.times = self.times[:self.draw_idx]
         
 
-def run_mcmc(config, model, out_file):
+def run_mcmc(config, newick_string, sequence_dict, out_file):
+    tree = newick.loads(newick_string)[0]
+    model = construct_model(config, tree, sequence_dict)
     with model:
         trace = TimedTrace()
         step = pm.Metropolis()

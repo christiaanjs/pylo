@@ -35,6 +35,9 @@ class TemplateBuilder:
 
         self.pymc_analysis_result_file = 'pymc_tracker.pickle'
         self.pymc_analysis_result_path = self.out_path / self.pymc_analysis_result_file
+
+        self.pymc_analysis_score_file = 'pymc_scores.csv'
+        self.pymc_analysis_score_path = self.out_path / self.pymc_analysis_score_file
         
         self.run_summary_file = 'run_summary.yaml'
         self.run_summary_path = self.out_path / self.run_summary_file

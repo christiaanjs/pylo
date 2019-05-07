@@ -1,15 +1,15 @@
 beast_jar: lib/feast.jar
 n_taxa: 20
-min_pop_size: 1000
-max_pop_size: 2000
-sampling_window: 100
+min_pop_size: 400
+max_pop_size: 500
+sampling_window: 50
 sequence_length: 1000
 relaxed_clock: False
-mutation_rate: 3.0
+mutation_rate: 0.0001
 kappa: 2.0
-frequencies: [0.25, 0.25, 0.25, 0.25]
+frequencies: [0.24, 0.26, 0.26, 0.24]
 rate_sd: null
-chain_length: 100000
+chain_length: 5000000
 log_every: 100
 prior_params:
   clock_rate: { m: 1.0, s: 1.25 }
@@ -17,8 +17,10 @@ prior_params:
   kappa: { m: 1.0, s: 1.25 }
 init_values: { clock_rate: 1.0, pop_size: 1.0, kappa: 2.0 }
 estimate_topology: False
-n_iter: 50000
+n_iter: 100000
 inference: mean_field
 burn_in: 0.1
-n_runs: 5
-n_eval_samples: 1000
+n_runs: 10
+n_eval_samples: 200
+nuts_draws: 100
+nuts_tune: 100

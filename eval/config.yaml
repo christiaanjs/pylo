@@ -22,5 +22,6 @@ inference: mean_field
 burn_in: 0.1
 n_runs: 10
 n_eval_samples: 200
-nuts_draws: 1000000
+nuts_draws: 100000
 nuts_tune: 100
+n_trace_samples: 1000

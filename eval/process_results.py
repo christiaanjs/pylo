@@ -72,5 +72,5 @@ def process_pymc_trace(trace, config, resample=False, burn_in=False):
 def process_beast_trace(result_filename, config):
     trace_df = pd.read_table(result_filename, comment='#')
     to_use = trace_df[int(trace_df.shape[0]*config['burn_in']):]
-    full_trace = to_use[['TreeHeight', 'kappa', 'popSize', 'clockRate']].rename({ 'TreeHeight': 'tree_height', 'popSize': 'pop_size', 'clockRate': 'clock_rate' })
+    full_trace = to_use[['TreeHeight', 'kappa', 'popSize', 'clockRate']].rename({ 'TreeHeight': 'tree_height', 'popSize': 'pop_size', 'clockRate': 'clock_rate' }, axis=1)
     return full_trace.sample(config['n_trace_samples'], random_state=config['seed'])

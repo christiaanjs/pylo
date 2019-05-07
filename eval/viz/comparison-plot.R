@@ -20,6 +20,13 @@ withTime <- df %>%
   filter(((row_number() %% (n() %/% nSamples)) == 0)) %>% 
   ungroup()
 
-ggplot(withTime, aes(x = elapsed_time, y = error)) +
-  geom_line() + 
-  facet_grid(seed ~ method, scales = 'free')
+seedsToUse <- c(3, 4, 8, 9, 10)
+withTime %>% filter(seed %in% seedsToUse) %>% 
+  ggplot(aes(x = elapsed_time, y = error)) +
+  geom_smooth() + 
+  facet_grid(seed ~ method, scales = 'free_x') #+ 
+  #theme(
+  #  strip.background = element_blank(),
+  #  strip.text.y = element_blank()
+  #)
+ggsave('out/comparison-plot.png')

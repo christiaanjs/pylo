@@ -1,6 +1,8 @@
 import pytest
 import newick
 import theano
+import yaml
+import json
 
 theano.config.optimizer = 'fast_compile'
 theano.config.exception_verbosity = 'high'
@@ -32,3 +34,17 @@ def tree_newick():
 @pytest.fixture
 def tree(tree_newick):
 	return newick.loads(tree_newick)[0]
+
+@pytest.fixture
+def dengue_config():
+    with open('test/data/dengue-config.yaml') as f:
+        config = yaml.load(f)
+
+    return config
+
+@pytest.fixture
+def dengue_sequence_dict():
+    with open('test/data/dengue-sequences.json') as f:
+        sequence_dict = json.load(f)
+    return sequence_dict
+        

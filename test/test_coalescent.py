@@ -28,3 +28,14 @@ def test_coalescent_heterochronous(pop,logp_expected):
     height_values = topology.get_init_heights()[topology.node_mask]
     logp = height_dist.logp(height_values).eval()
     assert_allclose(logp, logp_expected, rtol=1e-3)
+
+dengue_cases = [(10, -48.521926838680535),(100, -74.85077951088705), (1000, -110.64089011722196)] 
+@pytest.mark.parametrize('pop_size,logp_expected', dengue_cases)
+def test_coalescent_dengue(dengue_config, pop_size, logp_expected):
+    tree = newick.loads(dengue_config['newick_string'])[0]
+    topology = TreeTopology(tree)
+    population_function = ConstantPopulationFunction(topology, pop_size)
+    height_dist = CoalescentTree.dist(topology, population_function)
+    height_values = topology.get_init_heights()[topology.node_mask]
+    logp = height_dist.logp(height_values).eval()
+    assert_allclose(logp, logp_expected, rtol=1e-2)

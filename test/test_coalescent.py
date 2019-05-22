@@ -15,7 +15,7 @@ def test_coalescent_constant_population():
     height_values = topology.get_init_heights()[topology.node_mask]
     logp = height_dist.logp(height_values).eval()
     logp_expected = -(4 / pop) - 2 * np.log(pop)
-    assert_allclose(logp, logp_expected, rtol=1e-3)
+    assert_allclose(logp, logp_expected)
     
 test_data = [(123,-14.456065261239203),(999,-20.722666738348064)]
 @pytest.mark.parametrize('pop,logp_expected', test_data)
@@ -27,7 +27,7 @@ def test_coalescent_heterochronous(pop,logp_expected):
     height_dist = CoalescentTree.dist(topology, population_function)
     height_values = topology.get_init_heights()[topology.node_mask]
     logp = height_dist.logp(height_values).eval()
-    assert_allclose(logp, logp_expected, rtol=1e-3)
+    assert_allclose(logp, logp_expected)
 
 dengue_cases = [(10, -48.521926838680535),(100, -74.85077951088705), (1000, -110.64089011722196)] 
 @pytest.mark.parametrize('pop_size,logp_expected', dengue_cases)
@@ -38,4 +38,4 @@ def test_coalescent_dengue(dengue_config, pop_size, logp_expected):
     height_dist = CoalescentTree.dist(topology, population_function)
     height_values = topology.get_init_heights()[topology.node_mask]
     logp = height_dist.logp(height_values).eval()
-    assert_allclose(logp, logp_expected, rtol=1e-2)
+    assert_allclose(logp, logp_expected)

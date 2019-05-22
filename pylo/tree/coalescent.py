@@ -24,7 +24,7 @@ class ConstantPopulationFunction(PopulationFunction):
         self.topology = topology
         
     def make_intervals(self, heights_sorted, node_mask):
-        lineage_count = get_lineage_count(node_mask)[1:]
+        lineage_count = get_lineage_count(node_mask)[:-1]
         population_func_array = tt.alloc(self.population_size, self.topology.get_node_count() - 1)
         durations = heights_sorted[1:] - heights_sorted[:-1]
         population_areas = durations / self.population_size

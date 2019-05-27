@@ -17,7 +17,7 @@ def test_coalescent_constant_population():
     logp_expected = -(4 / pop) - 2 * np.log(pop)
     assert_allclose(logp, logp_expected)
     
-test_data = [(123,-14.456065261239203),(999,-20.722666738348064)]
+test_data = [(123,-14.446309163678226),(999,-20.721465537146862)]
 @pytest.mark.parametrize('pop,logp_expected', test_data)
 def test_coalescent_heterochronous(pop,logp_expected):
     newick_string = "(((A:0.2,B:0.1):0.3,C:0.1):0.3,D:0.8)"

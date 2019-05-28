@@ -1,0 +1,26 @@
+beast_jar: ../../eval/lib/feast.jar
+n_taxa: 5
+sampling_window: 1000
+sequence_length: 1000
+relaxed_clock: False
+mutation_rate: 0.0001
+kappa: 2.0
+frequencies: [0.24, 0.26, 0.26, 0.24]
+rate_sd: null
+chain_length: 3000000
+log_every: 100
+estimate_clock_rate: False
+prior_params:
+  clock_rate: { m: 1.0, s: 1.25 }
+  pop_size: { m: 6 , s: 0.1 }
+  kappa: { m: 1.0, s: 1.25 }
+init_values: { clock_rate: 1.0, pop_size: 1000, kappa: 2.0 }
+estimate_topology: True
+n_iter: 50000
+inference: mean_field
+burn_in: 0.1
+n_runs: 100
+n_eval_samples: 200
+nuts_draws: 100000
+nuts_tune: 100
+n_trace_samples: 1000

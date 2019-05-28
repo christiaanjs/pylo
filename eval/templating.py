@@ -1,3 +1,4 @@
+import numpy as np
 import pathlib
 import random
 import jinja2
@@ -5,9 +6,9 @@ from Bio import Phylo
 import io
 import xml
 
-template_dir = 'templates'
+default_template_dir = 'templates'
 class TemplateBuilder:
-    def __init__(self, out_dir):
+    def __init__(self, out_dir, template_dir=default_template_dir):
         self.out_path = pathlib.Path(out_dir)
         self.template_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
         self.tree_sim_template_file = 'sim-tree.j2.xml'
@@ -52,8 +53,8 @@ class TemplateBuilder:
         self.run_trace_path = self.out_path / self.run_trace_file
 
     def build_tree_sim(self, config):
-        min_pop_size, max_pop_size, sampling_window, n_taxa = config['min_pop_size'], config['max_pop_size'], config['sampling_window'], config['n_taxa'] 
-        pop_size = int(random.random() * (max_pop_size - min_pop_size) + min_pop_size)
+        sampling_window, n_taxa = config['sampling_window'], config['n_taxa'] 
+        pop_size = float(np.exp(np.random.normal(config['prior_params']['pop_size']['m'], config['prior_params']['pop_size']['s'])))
         sampling_times = [random.random() * sampling_window for i in range(n_taxa)]
         taxon_names = ["T{}".format(i) for i in range(n_taxa)]
         date_trait_string = ','.join(['{0}={1}'.format(taxon_name, sampling_time) for taxon_name, sampling_time in zip(taxon_names, sampling_times)])
@@ -87,18 +88,22 @@ class TemplateBuilder:
         sequence_dict = { tag.attrib['taxon']: tag.attrib['value'] for tag in seq_xml_root.findall('./sequence') }
         return sequence_dict
 
-    def build_beast_analysis(self, config, newick_string, date_trait_string, sequence_dict):
+    def build_beast_analysis(self, config, newick_string, date_trait_string, sequence_dict, out_file=None, trace_file=None, tree_file=None):
+        out_path = self.beast_analysis_out_path if out_file is None else (self.out_path / out_file)
+        trace_path = self.beast_analysis_trace_path if trace_file is None else (self.out_path / trace_file)
+        tree_path = self.beast_analysis_tree_path if tree_file is None else (self.out_path / tree_file)
+
         beast_analysis_template = self.template_env.get_template(self.beast_analysis_template_file)
         beast_analysis_string = beast_analysis_template.render(
             newick_string=newick_string,
             sequence_dict=sequence_dict,
             date_trait_string=date_trait_string,
-            trace_out_path=self.beast_analysis_trace_path,
-            tree_out_path=self.beast_analysis_tree_path,
+            trace_out_path=trace_path,
+            tree_out_path=tree_path,
             **config
         )
 
-        with open(self.beast_analysis_out_path, 'w') as f:
+        with open(out_path, 'w') as f:
             f.write(beast_analysis_string)
 
-    
+        return out_path

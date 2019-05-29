@@ -61,6 +61,8 @@ def get_trace_cols(config):
     return ['tree_height', 'kappa', 'pop_size'] + (['clock_rate'] if config['estimate_clock_rate'] else [])
 
 def process_pymc_trace(trace, config, resample=False, burn_in=False):
+    if type(trace) != pm.sampling.MultiTrace:
+        trace = pm.sampling.MultiTrace([trace])
     trace_df = pm.trace_to_dataframe(trace)
     if burn_in:
         trace_df = trace_df[int(trace_df.shape[0]*config['burn_in']):]

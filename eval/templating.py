@@ -26,6 +26,12 @@ class TemplateBuilder:
         self.seq_sim_result_file = 'sequences.xml'
         self.seq_sim_result_path = self.out_path / self.seq_sim_result_file
 
+        self.cluster_tree_template_file = 'cluster-tree.j2.xml'
+        self.cluster_tree_out_file = 'cluster-tree.xml'
+        self.cluster_tree_out_path = self.out_path / self.cluster_tree_out_file
+        self.cluster_tree_result_file = 'cluster-tree.trees'
+        self.cluster_tree_result_path = self.out_path / self.cluster_tree_result_file
+
         self.beast_analysis_template_file = 'beast-analysis.j2.xml'
         self.beast_analysis_out_file = 'beast-analysis.xml'
         self.beast_analysis_out_path = self.out_path / self.beast_analysis_out_file
@@ -67,9 +73,9 @@ class TemplateBuilder:
         
         return pop_size, taxon_names, date_trait_string
 
-    def extract_newick_string(self):
+    def extract_newick_string(self, tree_path):
         with io.StringIO() as s:
-            Phylo.convert(self.tree_sim_result_path, 'nexus', s, 'newick')
+            Phylo.convert(tree_path, 'nexus', s, 'newick')
             newick_string = s.getvalue().strip()
         return newick_string
 
@@ -87,6 +93,17 @@ class TemplateBuilder:
         seq_xml_root = xml.etree.ElementTree.parse(self.seq_sim_result_path)
         sequence_dict = { tag.attrib['taxon']: tag.attrib['value'] for tag in seq_xml_root.findall('./sequence') }
         return sequence_dict
+
+    def build_cluster_tree(self, config, sequence_dict, date_trait_string):
+        cluster_tree_template = self.template_env.get_template(self.cluster_tree_template_file)
+        cluster_tree_string = cluster_tree_template.render(
+            sequence_dict=sequence_dict,
+            date_trait_string=date_trait_string,
+            out_file=self.cluster_tree_result_path,
+            **config    
+        )
+        with open(self.cluster_tree_out_path, 'w') as f:
+            f.write(cluster_tree_string)
 
     def build_beast_analysis(self, config, newick_string, date_trait_string, sequence_dict, out_file=None, trace_file=None, tree_file=None):
         out_path = self.beast_analysis_out_path if out_file is None else (self.out_path / out_file)

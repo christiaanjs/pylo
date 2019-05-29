@@ -1,14 +1,23 @@
 <beast version="2.0"
     namespace="beast.core
     :beast.util
+    :beast.evolution.tree
     :beast.evolution.alignment">
     <run spec="feast.simulation.GPSimulator" nSims="1">
-        <simulationObject spec="ClusterTree" clusterType="{{ cluster_type }}">
-            <taxa spec="Alignment" dataType="nucleotide">
-                {% for taxon_name, sequence in taxa %}<sequence spec="Sequence" taxon="{{ taxon_name }}">{{ sequence }}</sequence>
+        <simulationObject spec="ClusterTree" clusterType="{{ cluster_type }}" id="tree">
+            <taxa spec="Alignment" dataType="nucleotide" id="alignment">
+                {% for taxon_name, sequence in sequence_dict.items() %}<sequence spec="Sequence" taxon="{{ taxon_name }}">{{ sequence }}</sequence>
             {% endfor %}
             </taxa>
-            <trait spec="TraitSet" traitname="date" value="{{ date_trait_string }}" taxa="@taxa"/>
+            {% if cluster_with_dates %}
+            <trait spec="TraitSet" traitname="date" value="{{ date_trait_string }}">
+                <taxa spec="TaxonSet" alignment="@alignment"/>
+            </trait>
+            {% endif %}
         </simulationObject>
+
+        <logger logEvery="1" fileName="{{ out_file }}">
+            <log idref="tree"/>
+        </logger>
     </run>
 </beast>

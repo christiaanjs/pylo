@@ -88,7 +88,7 @@ class TreeTopology(object):
         if dummy_seq is None:
             dummy_seq = list(sequence_dict.values())[0]
                
-        node_child_indices = self.child_indices[self.leaf_mask]
+        node_child_indices = self.child_indices[self.node_mask]
         leaf_child_names = np.where(self.leaf_mask[node_child_indices], self.names[node_child_indices], None)        
 
         return [[dummy_seq if name is None else sequence_dict[name] for name in node] for node in leaf_child_names]

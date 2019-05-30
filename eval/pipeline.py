@@ -85,7 +85,7 @@ def beast_pipeline(**config):
         run_summary = yaml.load(f)
 
     newick_string = get_analysis_tree(build_templates, config, run_summary)
-    build_templates.build_beast_analysis(config, newick_string, date_trait_string, sequence_dict)
+    build_templates.build_beast_analysis(config, newick_string, run_summary['date_trait_string'], sequence_dict)
 
     print('Running BEAST analysis')
     subprocess.run(beast_args + [str(build_templates.beast_analysis_out_path)])

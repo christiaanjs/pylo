@@ -1,5 +1,6 @@
 import os
 import yaml
+import pickle
 import sys
 sys.path += ['../../eval']
 import templating
@@ -90,20 +91,6 @@ def mcmc_pipeline(**config):
 
     variational_analysis.run_mcmc(config, run_summary['newick_string'], sequence_dict, build_templates.nuts_trace_path)
 
-def results_pipeline(**config):
-    build_templates = templating.TemplateBuilder(config['out_dir'])
-
-    with(open(build_templates.run_summary_path)) as f:
-        run_summary = yaml.load(f)
-
-    variational_scores = pd.read_csv(build_templates.pymc_analysis_score_path).assign(method='variational')
-    print('Getting beast scores')
-    beast_scores = process_results.get_beast_scores(build_templates.beast_analysis_trace_path, config, run_summary['pop_size']).assign(method='beast')
-    #mcmc_scores = process_results.get_mcmc_scores(mcmc_result, config, pop_size).assign(method='mcmc')
-
-    combined_scores = pd.concat([beast_scores, variational_scores])
-    combined_scores.to_csv(build_templates.run_results_path)
-
 def trace_pipeline(**config):
     do_seeding(config)
     build_templates = templating.TemplateBuilder(config['out_dir'])
@@ -117,8 +104,12 @@ def trace_pipeline(**config):
     #variational_trace = process_results.get_variational_trace(build_templates.pymc_analysis_result_path, config, sequence_dict, run_summary['newick_string'])
     #variational_trace_df = process_results.process_pymc_trace(variational_trace, config).assign(method='variational')
     print('Getting BEAST trace')
+    with open(build_templates.nuts_trace_path, 'rb') as f:
+        mcmc_trace = pickle.load(f)
+    mcmc_trace_df = process_results.process_pymc_trace(mcmc_trace, config, burn_in=True).assign(method='pymc-mcmc')
     beast_trace_df = process_results.process_beast_trace(build_templates.beast_analysis_trace_path, config).assign(method='beast')
-    combined_trace = beast_trace_df#pd.concat([variational_trace_df, beast_trace_df])
+    beast_fixed_trace_df = process_results.process_beast_trace(build_templates.out_path / 'fixed-beast-log.log', config).assign(method='beast-fixed')
+    combined_trace = pd.concat([mcmc_trace_df, beast_trace_df, beast_fixed_trace_df])
     combined_trace.to_csv(build_templates.run_trace_path)
 
 if __name__ == '__main__':

@@ -19,8 +19,8 @@ estimate_topology: True
 n_iter: 50000
 inference: mean_field
 burn_in: 0.1
-n_runs: 100
+n_runs: 10
 n_eval_samples: 200
-nuts_draws: 100000
-nuts_tune: 100
+nuts_draws: 500
+nuts_tune: 500
 n_trace_samples: 1000

@@ -13,6 +13,8 @@ seeds <- summaries %>% lapply(function(x) x$config$seed)
 results <- file.path(runOutDirs, 'trace.csv') %>% lapply(readr::read_csv)
 df <- results %>% setNames(seeds) %>% bind_rows(.id = 'seed') %>% mutate(seed = as.numeric(seed))
 
+trueTrees <- summaries %>% lapply(function(x) read.newick(text=x$newick_string))
+
 trueValues <- summaries %>%
   sapply(function(x) c(seed = x$config$seed, pop_size = x$pop_size, tree_height = read.newick(text=x$newick_string) %>% nodeHeights %>% max())) %>% 
   t() %>% 
@@ -27,7 +29,12 @@ hpds <- df %>%
 withTruth <- hpds %>% 
   left_join(trueValues)
 
-coverage <- withTruth %>% 
+ggplot(withTruth) +
+  geom_errorbar(aes(x=value, ymin=lower, ymax=upper, color=method), width=10, alpha=0.5) +
+  geom_abline(slope=1, intercept=0) +
+  facet_wrap(~ variable, scales='free')
+
+ranges <- withTruth %>% 
   mutate(covered = (value > lower) & (value < upper)) %>% 
   group_by(variable, method) %>% 
   summarise(coverage = mean(covered))
@@ -37,6 +44,7 @@ df %>%
   ggplot(aes(x=value, fill=method)) + 
   geom_histogram( alpha=0.5, bins=30) +
   geom_vline(aes(xintercept = value, lty='True value'), data = trueValues, color='darkgreen') +
+  geom_label(aes(y=value, label=seed)) +
   facet_wrap(variable ~ seed, scales='free') + scale_linetype_manual(values = c('True value' = 'dashed') ,name = NULL)
 
 ggsave('out/marginal-comparison.png')

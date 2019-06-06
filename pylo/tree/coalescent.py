@@ -37,10 +37,7 @@ class CoalescentTree(Continuous):
         shape = topology.get_internal_node_count()
         kwargs.setdefault('shape', shape)
         transform = TreeHeightProportionTransform(topology)
-        testval_transformed = np.concatenate([0.5*np.ones(shape - 1), [1.0]])
-        testval = transform.backward(testval_transformed).eval() 
-        super(CoalescentTree, self).__init__(
-            testval=testval, transform=transform, *args, **kwargs)
+        super(CoalescentTree, self).__init__(transform=transform, *args, **kwargs)
 
         self.topology = topology
         self.population_func = population_func

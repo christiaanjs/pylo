@@ -25,7 +25,7 @@ def construct_model(config, tree, sequence_dict):
     with pm.Model() as model:
         pop_size = pm.Lognormal('pop_size', **get_lognormal_params('pop_size'))
         pop_func = ConstantPopulationFunction(topology, pop_size)
-        tree_heights = CoalescentTree('tree', topology, pop_func)
+        tree_heights = CoalescentTree('tree', topology, pop_func, testval=topology.get_init_heights()[topology.node_mask])
         
         kappa = pm.Lognormal('kappa', **get_lognormal_params('kappa'))
         pi = pm.Dirichlet('pi', a=np.ones(4))
@@ -93,9 +93,10 @@ def run_mcmc(config, newick_string, sequence_dict, out_file):
     tree = newick.loads(newick_string)[0]
     model = construct_model(config, tree, sequence_dict)
     with model:
-        trace = TimedTrace()
-        step = pm.Metropolis()
-        pm.sample(chains=1, draws=config['nuts_draws'], trace=trace, step=[step], tune=0)
+        #trace = TimedTrace()
+        #step = pm.Metropolis()
+        #pm.sample(chains=1, draws=config['nuts_draws'], trace=trace, step=[step], tune=0)
+        trace = pm.sample(draws=config['nuts_draws'], tune=config['nuts_tune'])
    
     with open(out_file, 'wb') as f:
         pickle.dump(trace, f) 

@@ -1,5 +1,5 @@
 beast_jar: lib/feast.jar
-n_taxa: 20
+n_taxa: 100
 sampling_window: 20
 sequence_length: 1000
 relaxed_clock: False
@@ -7,8 +7,8 @@ mutation_rate: 0.001
 kappa: 2.0
 frequencies: [0.24, 0.26, 0.26, 0.24]
 rate_sd: null
-chain_length: 1000000
-log_every: 1000
+chain_length: 20000
+log_every: 100
 estimate_clock_rate: False
 prior_params:
   clock_rate: { m: 1.0, s: 1.25 }

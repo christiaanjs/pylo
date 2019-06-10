@@ -26,11 +26,17 @@ class TemplateBuilder:
         self.seq_sim_result_file = 'sequences.xml'
         self.seq_sim_result_path = self.out_path / self.seq_sim_result_file
 
-        self.cluster_tree_template_file = 'cluster-tree.j2.xml'
-        self.cluster_tree_out_file = 'cluster-tree.xml'
-        self.cluster_tree_out_path = self.out_path / self.cluster_tree_out_file
-        self.cluster_tree_result_file = 'cluster-tree.trees'
-        self.cluster_tree_result_path = self.out_path / self.cluster_tree_result_file
+        self.lsd_tree_file = 'lsd-input.trees'
+        self.lsd_tree_path = self.out_path / self.lsd_tree_file
+        self.lsd_date_file = 'lsd-input.dates'
+        self.lsd_date_path = self.out_path / self.lsd_date_file
+        self.lsd_rate_file = 'lsd-input.rates'
+        self.lsd_rate_path = self.out_path / self.lsd_rate_file
+
+        self.lsd_result_file = 'analysis-tree'
+        self.lsd_result_path = self.out_path / self.lsd_result_file
+        self.lsd_result_tree_file = self.lsd_result_file + '.date.nexus'
+        self.lsd_result_tree_path = self.out_path / self.lsd_result_tree_file        
 
         self.beast_analysis_template_file = 'beast-analysis.j2.xml'
         self.beast_analysis_out_file = 'beast-analysis.xml'

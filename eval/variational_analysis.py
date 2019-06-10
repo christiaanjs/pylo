@@ -20,7 +20,7 @@ def construct_model(config, tree, sequence_dict):
     child_patterns = tt.as_tensor_variable(topology.build_sequence_table(pattern_dict))
 
     def get_lognormal_params(var):
-        return { 'mu': config['prior_params'][var]['m'], 'sd': config['prior_params'][var]['s'] }
+        return { 'mu': config['prior_params'][var]['m'], 'sd': config['prior_params'][var]['s'], 'testval': config['init_values'][var] }
 
     with pm.Model() as model:
         pop_size = pm.Lognormal('pop_size', **get_lognormal_params('pop_size'))

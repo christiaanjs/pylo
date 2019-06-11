@@ -120,6 +120,9 @@
         <log idref="CoalescentConstant.t:SequenceSimulator"/>
         {% if estimate_clock_rate %}<log idref="clockRate.c:SequenceSimulator"/>{% endif %}
         <log idref="freqParameter.s:SequenceSimulator"/>
+
+        <log spec='ESS' arg="@TreeHeight.t:SequenceSimulator"/>
+        <log spec='ESS' arg="@popSize.t:SequenceSimulator"/>
 	<log spec="feast.DateTimeLoggable"/>
     </logger>
 

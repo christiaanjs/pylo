@@ -13,11 +13,11 @@ log_every: 1000
 estimate_clock_rate: False
 prior_params:
   clock_rate: { m: 1.0, s: 1.25 }
-  pop_size: { m: 2 , s: 0.1 }
+  pop_size: { m: 2 , s: 0.6 }
   kappa: { m: 1.0, s: 1.25 }
 init_values: { clock_rate: 1.0, pop_size: 10, kappa: 2.0 }
 estimate_topology: True
-n_iter: 30000
+n_iter: 20000
 inference: mean_field
 burn_in: 0.1
 n_runs: 100

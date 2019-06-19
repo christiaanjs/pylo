@@ -1,7 +1,7 @@
 beast_jar: lib/feast.jar
 lsd_executable: lsd
-n_taxa: 10
-sampling_window: 20
+n_taxa: 3
+sampling_window: 5
 sequence_length: 1000
 relaxed_clock: False
 mutation_rate: 0.001
@@ -20,5 +20,5 @@ estimate_topology: True
 n_iter: 20000
 inference: mean_field
 burn_in: 0.1
-n_runs: 10
-out_dir: out-coverage
+n_runs: 1
+out_dir: viz/3taxa

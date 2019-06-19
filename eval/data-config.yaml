@@ -1,24 +1,22 @@
 beast_jar: lib/feast.jar
 lsd_executable: lsd
-n_taxa: 10
-sampling_window: 20
-sequence_length: 1000
 relaxed_clock: False
-mutation_rate: 0.001
-kappa: 2.0
-frequencies: [0.24, 0.26, 0.26, 0.24]
+mutation_rate: 0.0005
 rate_sd: null
 chain_length: 1000000
 log_every: 1000
 estimate_clock_rate: False
 prior_params:
-  clock_rate: { m: 1.0, s: 1.25 }
-  pop_size: { m: 2 , s: 0.6 }
+  pop_size: { m: 2 , s: 2 }
   kappa: { m: 1.0, s: 1.25 }
 init_values: { clock_rate: 1.0, pop_size: 10, kappa: 2.0 }
 estimate_topology: True
-n_iter: 20000
+n_iter: 30000
 inference: mean_field
 burn_in: 0.1
-n_runs: 10
-out_dir: out-coverage
+n_runs: 100
+out_dir: out-data
+datasets:
+  dengue: Dengue.env.nex
+  rsv2: RSV2.nex
+seed: 1

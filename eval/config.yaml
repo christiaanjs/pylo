@@ -1,6 +1,6 @@
 beast_jar: lib/feast.jar
 lsd_executable: lsd
-n_taxa: 20
+n_taxa: 100
 sampling_window: 20
 sequence_length: 1000
 relaxed_clock: False
@@ -8,19 +8,19 @@ mutation_rate: 0.001
 kappa: 2.0
 frequencies: [0.24, 0.26, 0.26, 0.24]
 rate_sd: null
-chain_length: 100000
+chain_length: 1000000
 log_every: 100
 estimate_clock_rate: False
 prior_params:
   clock_rate: { m: 1.0, s: 1.25 }
   pop_size: { m: 2 , s: 0.1 }
   kappa: { m: 1.0, s: 1.25 }
-init_values: { clock_rate: 1.0, pop_size: 1000, kappa: 2.0 }
+init_values: { clock_rate: 1.0, pop_size: 10, kappa: 2.0 }
 estimate_topology: False
-n_iter: 20000
+n_iter: 40000
 inference: mean_field
 burn_in: 0.1
-n_runs: 3
+n_runs: 10
 n_eval_samples: 200
 nuts_draws: 10000
 nuts_tune: 100

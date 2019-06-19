@@ -13,8 +13,8 @@ if __name__ == '__main__':
     with open(config_filename) as f:
         config = yaml.load(f)
     
-    exporter = nbconvert.HTMLExporter()
-    writer = nbconvert.writers.FilesWriter()
+    #exporter = nbconvert.HTMLExporter()
+    #writer = nbconvert.writers.FilesWriter()
 
     for i in tqdm(range(config['n_runs'])):
         run_out_dir = pathlib.Path('out') / str(i)
@@ -29,8 +29,8 @@ if __name__ == '__main__':
             run_nb, 
             parameters=dict(config=run_config)
         )
-        body, resources = exporter.from_filename(run_nb)
-        writer.write(output=body, resources=resources, notebook_name='pipeline')
+        #body, resources = exporter.from_filename(run_nb)
+        #writer.write(output=body, resources=resources, notebook_name='pipeline')
 
 
 

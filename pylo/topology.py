@@ -98,7 +98,7 @@ class TreeTopology(object):
         non_root_heights = heights[:-1]
         parent_heights = heights[self.node_parent_indices[:-1]]
         min_heights = self.max_leaf_descendant_heights[self.node_mask][:-1]
-        return (non_root_heights - min_heights)/(parent_heights - min_heights), root_height - min_heights[-1]
+        return (non_root_heights - min_heights)/(parent_heights - min_heights), root_height - self.max_leaf_descendant_heights[-1]
 
     def get_heights(self, root_val, proportions):
         n = self.get_internal_node_count()

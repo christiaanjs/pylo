@@ -20,5 +20,5 @@ estimate_topology: True
 n_iter: 20000
 inference: mean_field
 burn_in: 0.1
-n_runs: 10
+n_runs: 100
 out_dir: out-coverage

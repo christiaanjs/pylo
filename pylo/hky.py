@@ -38,8 +38,8 @@ def hky_eigendecomposition(kappa, pi):
 	return U, lambd, Vt
 
 
-def hky_transition_probs_vec(kappa, pi, t):
-	U, lambd, Vt = hky_eigendecomposition(kappa, pi)
+def eigen_transition_probs_vec(eigendecomposition, t):
+	U, lambd, Vt = eigendecomposition
 
 	diag = tt.AllocDiag(axis1=1, axis2=2)(tt.exp(tt.outer(t, lambd))) #[len(t), 4, 4]
 
@@ -54,8 +54,8 @@ def hky_transition_probs_vec(kappa, pi, t):
 	return (U_dot_diag_expanded * Vt_expanded).sum(axis=2)
 	
 	
-def hky_transition_probs_mat(kappa, pi, t):
-	U, lambd, Vt = hky_eigendecomposition(kappa, pi)
+def eigen_transition_probs_mat(eigendecomposition, t):
+	U, lambd, Vt = eigendecomposition 
 
 	lambd_expanded = lambd.dimshuffle('x', 'x', 0)
 	t_expanded = t.dimshuffle(0, 1, 'x')
@@ -72,8 +72,8 @@ def hky_transition_probs_mat(kappa, pi, t):
 
 	return (U_dot_diag_expanded * Vt_expanded).sum(axis=3)
 
-def hky_transition_probs_scalar(kappa, pi, t):
-	U, lambd, Vt = hky_eigendecomposition(kappa, pi)
+def eigen_transition_probs_scalar(eigendecomposition, t):
+	U, lambd, Vt = eigendecomposition
 
 	return tt.dot(U, tt.dot(tt.diag(tt.exp(lambd * t)), Vt))
 
@@ -114,20 +114,32 @@ class SubstitutionModel:
     def get_equilibrium_probs(self):
         raise NotImplementedError
 
-class HKYSubstitutionModel(SubstitutionModel):
+class EigenSubstitutionModel(SubstitutionModel):
+    def get_eigendecomposition(self):
+        raise NotImplementedError
+
+    def get_transition_probs_scalar(self, d):
+        return eigen_transition_probs_scalar(self.get_eigendecomposition(), d)
+        
+    def get_transition_probs_vec(self, d):
+        return eigen_transition_probs_vec(self.get_eigendecomposition(), d)
+        
+    def get_transition_probs_mat(self, d):
+        return eigen_transition_probs_mat(self.get_eigendecomposition(), d)
+    
+class HKYSubstitutionModel(EigenSubstitutionModel):
     def __init__(self, kappa, pi):
         self.kappa = kappa
         self.pi = pi
+        self.eigendecomposition = hky_eigendecomposition(kappa, pi)
 
-    def get_transition_probs_scalar(self, d):
-        return hky_transition_probs_scalar(self.kappa, self.pi, d)
-        
-    def get_transition_probs_vec(self, d):
-        return hky_transition_probs_vec(self.kappa, self.pi, d)
-        
-    def get_transition_probs_mat(self, d):
-        return hky_transition_probs_mat(self.kappa, self.pi, d)
-    
+    def get_eigendecomposition(self):
+        return self.eigendecomposition
+
     def get_equilibrium_probs(self):
         return self.pi
-        
+
+class JCSubstitutionModel(EigenSubstitutionModel):
+    def get_eigendecomposition(self):
+    
+    def get_equilibrium_probs

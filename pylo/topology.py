@@ -64,6 +64,17 @@ def get_names(node):
     return traverse_postorder(node, leaf_f, node_f)
 
 class TreeTopology(object):
+
+    def _init_mappings(self):
+        self.node_indices = self.node_mask.nonzero()
+        self.node_index_mapping = np.where(self.node_mask, (np.arange(len(self.init_heights))[:, np.newaxis] == self.node_indices).argmax(axis=1), -1)
+        node_parent_indices = self.parent_indices[self.node_mask]
+        self.node_parent_indices = np.where(node_parent_indices == -1, -1, self.node_index_mapping[node_parent_indices])
+        node_child_indices = self.child_indices[self.node_mask]
+        node_child_indices = np.where(self.node_mask[node_child_indices], node_child_indices, -1)
+        self.node_child_indices = np.where(node_child_indices == -1, -1, self.node_index_mapping[node_child_indices])
+        
+
     def __init__(self, tree):
         self.tree = tree
         self.init_heights = get_heights(tree)
@@ -73,13 +84,7 @@ class TreeTopology(object):
         self.child_indices = get_child_indices(tree)
         self.parent_indices = get_parent_indices(tree)
         self.max_leaf_descendant_heights = get_max_leaf_descendant_heights(tree)
-        self.node_indices = self.node_mask.nonzero()
-        self.node_index_mapping = np.where(self.node_mask, (np.arange(len(self.names))[:, np.newaxis] == self.node_indices).argmax(axis=1), -1)
-        node_parent_indices = self.parent_indices[self.node_mask]
-        self.node_parent_indices = np.where(node_parent_indices == -1, -1, self.node_index_mapping[node_parent_indices])
-        node_child_indices = self.child_indices[self.node_mask]
-        node_child_indices = np.where(self.node_mask[node_child_indices], node_child_indices, -1)
-        self.node_child_indices = np.where(node_child_indices == -1, -1, self.node_index_mapping[node_child_indices])
+        self._init_mappings()
 
     def get_init_heights(self):
         return self.init_heights

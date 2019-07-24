@@ -53,7 +53,6 @@ def eigen_transition_probs_vec(eigendecomposition, t):
 
 	return (U_dot_diag_expanded * Vt_expanded).sum(axis=2)
 	
-	
 def eigen_transition_probs_mat(eigendecomposition, t):
 	U, lambd, Vt = eigendecomposition 
 
@@ -76,7 +75,6 @@ def eigen_transition_probs_scalar(eigendecomposition, t):
 	U, lambd, Vt = eigendecomposition
 
 	return tt.dot(U, tt.dot(tt.diag(tt.exp(lambd * t)), Vt))
-
 
 def hky_transition_probs_expm(kappa, pi, t):
 	Q_nodiag = make_tensor([
@@ -139,7 +137,25 @@ class HKYSubstitutionModel(EigenSubstitutionModel):
     def get_equilibrium_probs(self):
         return self.pi
 
+jc_eigendecomposition = (
+    make_tensor([
+        [1.0, 2.0, 0.0, 0.5],
+        [1.0, -2.0, 0.5, 0.0],
+        [1.0, 2.0, 0.0, -0.5],
+        [1.0, -2.0, -0.5, 0.0]
+    ]),
+    make_tensor([0.0, -1.3333333333333333, -1.3333333333333333, -1.3333333333333333]),
+    make_tensor([
+        [0.25, 0.25, 0.25, 0.25],
+        [0.125, -0.125, 0.125, -0.125],
+        [0.0, 1.0, 0.0, -1.0],
+        [1.0, 0.0, -1.0, 0.0]
+    ])
+)
+
 class JCSubstitutionModel(EigenSubstitutionModel):
     def get_eigendecomposition(self):
+       return jc_eigendecomposition
     
-    def get_equilibrium_probs
+    def get_equilibrium_probs(self):
+        return tt.as_tensor(np.full(4, 0.25))

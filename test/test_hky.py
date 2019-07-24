@@ -33,13 +33,19 @@ test_data = [
 	)
 ]
 
+@pytest.mark.parametrize('t', [0.1, 1.0, 10.0])
+def test_hky_jc_special_case(t):
+    jc_transition_probs = eigen_transition_probs_scalar(jc_eigendecomposition, t).eval()
+    hky_transition_probs = eigen_transition_probs_scalar(hky_eigendecomposition(1.0, tt.as_tensor(np.full(4, 0.25))), t).eval()
+    assert_allclose(hky_transition_probs, jc_transition_probs)
+
 @pytest.mark.parametrize('kappa,pi,t,expected', test_data)
 def test_hky_transition_probs_scalar(kappa, pi, t, expected):
 	kappa_ = tt.scalar()
 	pi_ = tt.vector()
 	t_ = tt.scalar()
 	
-	transition_probs_ = hky_transition_probs_scalar(kappa_, pi_, t_)
+	transition_probs_ = eigen_transition_probs_scalar(hky_eigendecomposition(kappa_, pi_), t_)
 	
 	f = theano.function([kappa_, pi_, t_], transition_probs_)
 	res = f(kappa, pi, t)
@@ -56,8 +62,8 @@ def test_hky_transition_probs_vec():
 	pi = np.array([0.3, 0.2, 0.25, 0.25])
 	ts = np.array([1.2, 0.8, 1.3])
 	
-	transition_probs_ = hky_transition_probs_scalar(kappa_, pi_, t_)
-	transition_probs_vectorised_ = hky_transition_probs_vec(kappa_, pi_, ts_)	
+	transition_probs_ = eigen_transition_probs_scalar(hky_eigendecomposition(kappa_, pi_), t_)
+	transition_probs_vectorised_ = eigen_transition_probs_vec(hky_eigendecomposition(kappa_, pi_), ts_)	
 
 	f = theano.function([kappa_, pi_, t_], transition_probs_)
 	f_vectorised = theano.function([kappa_, pi_, ts_], transition_probs_vectorised_)
@@ -75,8 +81,8 @@ def test_hky_transition_probs_mat():
 	pi = np.array([0.3, 0.2, 0.25, 0.25])
 	ts = np.array([[1.2, 0.8, 1.3], [1.1, 0.7, 2.2]])
 	
-	transition_probs_ = hky_transition_probs_scalar(kappa_, pi_, t_)
-	transition_probs_vectorised_ = hky_transition_probs_mat(kappa_, pi_, ts_)	
+	transition_probs_ = eigen_transition_probs_scalar(hky_eigendecomposition(kappa_, pi_), t_)
+	transition_probs_vectorised_ = eigen_transition_probs_mat(hky_eigendecomposition(kappa_, pi_), ts_)	
 
 	f = theano.function([kappa_, pi_, t_], transition_probs_)
 	f_vectorised = theano.function([kappa_, pi_, ts_], transition_probs_vectorised_)
